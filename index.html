@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12343b">
+<title>Bite Window</title>
+<style>
+:root{
+  --paper:#e3eeea; --panel:#f4f9f6; --ink:#12343b; --soft:#4b6a70; --line:#b5cbc8;
+  --buoy:#e5481c; --sun:#f2b632; --deep:#0c2a3f; --shallow:#6fb9c2;
+  --sign:"Bahnschrift","DIN Alternate","DIN Condensed","Avenir Next Condensed","Roboto Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Avenir Next","Segoe UI",Roboto,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.45 var(--body)}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--buoy);outline-offset:2px}
+.wrap{max-width:980px;margin:0 auto;padding:0 14px 48px}
+.top{background:var(--ink);color:#fff;padding:env(safe-area-inset-top) 0 0;position:sticky;top:0;z-index:5}
+.tabs{max-width:980px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.tabs button{background:none;border:0;border-bottom:5px solid transparent;color:#cfe3e2;padding:14px 2px 10px;font:600 18px/1 var(--sign);cursor:pointer}
+.tabs button[aria-selected=true]{color:#fff;border-bottom-color:var(--buoy)}
+.subs{display:flex;gap:8px;padding:14px 0 2px;flex-wrap:wrap}
+.chip{background:none;border:2px solid var(--ink);border-radius:999px;padding:7px 15px;font-weight:600;font-size:16px;cursor:pointer;min-height:44px}
+.chip[aria-pressed=true]{background:var(--ink);color:#fff}
+.controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px 16px;padding:14px 0 16px;border-bottom:2px solid var(--line)}
+.ctl>label,.ctl>.lab{display:block;font-size:15px;color:var(--soft);margin-bottom:4px}
+.seg{display:flex;border:2px solid var(--ink);border-radius:9px;overflow:hidden}
+.seg button{flex:1;background:none;border:0;border-left:2px solid var(--ink);padding:8px 3px;min-height:44px;font-size:15px;font-weight:600;cursor:pointer;line-height:1.1}
+.seg button:first-child{border-left:0}
+.seg button[aria-pressed=true]{background:var(--ink);color:#fff}
+.step{display:flex;align-items:stretch;border:2px solid var(--ink);border-radius:9px;overflow:hidden}
+.step button{width:50px;background:var(--ink);color:#fff;border:0;font-size:24px;line-height:1;cursor:pointer}
+.step input{flex:1;min-width:0;border:0;background:var(--panel);text-align:center;font:600 22px var(--sign);min-height:44px;-moz-appearance:textfield}
+.step input::-webkit-outer-spin-button,.step input::-webkit-inner-spin-button{-webkit-appearance:none}
+.setup{grid-column:1/-1}
+.skyline{margin:0;font:600 18px/1.25 var(--sign)}
+select{width:100%;font:600 17px var(--body);color:var(--ink);background:var(--panel);border:2px solid var(--ink);border-radius:9px;padding:10px;min-height:48px}
+.fit{margin:8px 0 0;font-size:16px}.fit b{font:700 18px var(--sign)}
+.meter{height:9px;border:2px solid var(--ink);border-radius:5px;margin-top:6px;overflow:hidden;background:#fff}.meter i{display:block;height:100%;background:var(--buoy)}
+.hint{font-size:14px;color:var(--soft);margin:4px 0 0}
+.when{display:flex;gap:8px;margin-top:8px}
+.when input{flex:1;min-width:0;border:2px solid var(--ink);border-radius:9px;background:var(--panel);padding:8px;min-height:44px}
+.answer{padding:20px 0 6px}
+.stage{font-size:17px;margin:0;color:var(--soft)}
+h1{font:700 clamp(56px,16vw,104px)/.95 var(--sign);margin:4px 0 6px;letter-spacing:-.01em}
+.lead{font:600 25px/1.2 var(--sign);margin:0}
+.rate{display:inline-block;margin:12px 10px 0 0;background:var(--buoy);color:#fff;font:700 19px/1 var(--sign);padding:7px 11px;border-radius:4px}
+.rate.Fair{background:var(--sun);color:var(--ink)}
+.rate.Slow{background:var(--soft)}
+.best{font-size:18px}
+.day{margin:18px 0 8px}
+.strip{position:relative;display:flex;height:34px;border-radius:5px;overflow:hidden;border:2px solid var(--ink);background:#fff}
+.strip i{flex:1}
+.mark{position:absolute;top:0;bottom:0;width:3px;background:var(--ink);box-shadow:0 0 0 1.5px #fff}
+.hours{display:flex;justify-content:space-between;font-size:14px;color:var(--soft);margin-top:3px}
+.grid{display:grid;grid-template-columns:104px minmax(0,1fr);gap:18px;margin-top:18px}
+.rest{margin-top:26px;max-width:640px}
+.column{position:relative;height:100%;min-height:380px;border-radius:0 0 12px 12px;background:linear-gradient(var(--shallow),#1f6a82 55%,var(--deep));border-top:5px solid var(--sun);overflow:hidden}
+.tick{position:absolute;left:0;right:0;border-top:1px solid #ffffff55;color:#fff;font:600 14px/1 var(--sign);padding:3px 0 0 6px}
+.band{position:absolute;left:40px;right:8px;background:var(--buoy);border:2px solid #fff;border-radius:7px;color:#fff;font:700 18px/1.05 var(--sign);display:flex;align-items:center;justify-content:center;text-align:center;min-height:34px;transition:top .25s,height .25s}
+h2{font:700 23px/1.15 var(--sign);margin:0 0 8px}
+section+section{margin-top:24px}
+.lures{list-style:none;margin:0;padding:0;counter-reset:l}
+.lures li{counter-increment:l;display:grid;grid-template-columns:32px 1fr;padding:8px 0;border-top:1px solid var(--line)}
+.lures li::before{content:counter(l);font:700 24px/1 var(--sign);color:var(--buoy)}
+.lures b{display:block}
+.prog{display:flex;align-items:stretch;gap:6px;flex-wrap:wrap}
+.c{flex:1 1 64px;min-width:0;font-size:15px;line-height:1.15;font-weight:600}
+.c span{display:block;height:44px;border-radius:7px;border:2px solid var(--ink);margin-bottom:4px}
+.drop-row{display:grid;grid-template-columns:70px 1fr auto;gap:10px;padding:8px 0;border-top:1px solid var(--line);align-items:baseline}.drop-row b{font:700 19px var(--sign)}.drop-row.best{background:#fff6d9;padding-left:8px;padding-right:8px;border-radius:6px}.weights{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 12px}.weights .chip{padding:5px 12px;min-width:50px}.drop-speed{max-width:230px;margin:6px 0 12px}
+.locbar{padding:12px 0 0}.locbtn{width:100%;min-height:48px;background:var(--ink);color:#fff;border:0;border-radius:9px;font:700 19px var(--sign);cursor:pointer}.locbtn:disabled{opacity:.65}.locbar .fine{margin-top:6px}
+.fine{font-size:15px;color:var(--soft);margin:8px 0 0}
+.facts{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 14px}
+.facts dt{font-weight:700}
+.facts dd{margin:0}
+.steps{margin:0;padding-left:22px}
+.rule{font-size:15px;border-left:5px solid var(--sun);padding:6px 0 6px 10px;margin:0}
+table{border-collapse:collapse;width:100%}
+td,th{text-align:left;vertical-align:top;padding:10px 8px 10px 0;border-top:1px solid var(--line)}
+th{font-weight:700;width:30%}
+.tag{display:inline-block;font:700 15px/1 var(--sign);padding:4px 7px;border-radius:3px;background:var(--ink);color:#fff;margin-bottom:4px}
+.tag.m{background:var(--sun);color:var(--ink)}.tag.w{background:#fff;color:var(--ink);border:1px solid var(--ink)}
+.sources{font-size:15px;padding-left:20px}
+a{color:#0d5f75}
+.linkbtn{background:none;border:0;padding:0;color:#0d5f75;text-decoration:underline;cursor:pointer;font-size:14px}
+@media(max-width:380px){.tabs button{font-size:16px}.grid{grid-template-columns:90px minmax(0,1fr);gap:12px}.band{left:34px;right:5px;font-size:16px}}
+@media(min-width:760px){.controls{grid-template-columns:repeat(4,minmax(0,1fr))}.grid{grid-template-columns:190px minmax(0,1fr);gap:34px}.column{height:480px}}
+@media(prefers-reduced-motion:reduce){.band{transition:none}}
+</style>
+</head>
+<body>
+<div class="top"><div class="tabs" role="tablist" id="tabs"></div></div>
+<div class="wrap">
+  <div id="fishing">
+    <div class="subs" id="subs"></div>
+    <div class="locbar"><button class="locbtn" id="gps">Update location</button><p class="fine" id="place" role="status"></p></div>
+    <div class="controls">
+      <div class="ctl"><div class="lab">When</div>
+        <div class="seg"><button id="live">Now</button><button id="set">Pick a time</button></div>
+        <div class="when" id="whenBox" hidden><input type="date" id="d" aria-label="Date"><input type="time" id="t" aria-label="Time"></div>
+      </div>
+      <div class="ctl"><label for="temp">Surface water</label>
+        <p class="skyline" id="tempLine"></p><div class="step" id="tempStep"><button id="minus" aria-label="Lower temperature">−</button><input id="temp" type="number" inputmode="numeric" min="32" max="90" placeholder="--"><button id="plus" aria-label="Raise temperature">+</button></div>
+        <p class="hint" id="tempHint"></p>
+      </div>
+      <div class="ctl"><div class="lab">Water color</div><div class="seg" id="clarity"></div></div>
+      <div class="ctl"><div class="lab">Sky</div><div class="seg" id="sky"></div><p class="skyline" id="skyLine"></p><p class="hint" id="skyHint"></p></div>
+      <div class="ctl setup"><label for="setup">Your setup</label><select id="setup"></select>
+        <div class="meter" aria-hidden="true"><i id="meter"></i></div><p class="fit" id="fit"></p></div>
+    </div>
+    <div class="answer">
+      <p class="stage" id="stage"></p>
+      <h1 id="depth"></h1>
+      <p class="lead" id="lead"></p>
+      <span class="rate" id="rate"></span><span class="best" id="best"></span>
+    </div>
+    <div class="day"><div class="strip" id="strip" role="img"></div><div class="hours"><span>12a</span><span>6a</span><span>Noon</span><span>6p</span><span>12a</span></div>
+      <p class="fine" id="sun"></p></div>
+    <div class="grid">
+      <div class="column" id="column" aria-hidden="true"></div>
+      <div>
+        <section><h2 id="lureH">Lures, in order</h2><ul class="lures" id="lures"></ul></section>
+        <section><h2>Color progression</h2><div class="prog" id="prog"></div><p class="fine" id="colorWhy"></p></section>
+      </div>
+    </div>
+    <div class="rest">
+        <section><h2>How to fish it</h2><dl class="facts" id="facts"></dl></section>
+        <section id="dropBox" hidden><h2>Weight and line out</h2>
+          <div class="lab">Weights you carry</div><div class="weights" id="weights"></div>
+          <div class="lab">Trolling speed, mph</div><div class="step drop-speed"><button id="spMinus" aria-label="Slower">−</button><input id="sp" type="number" inputmode="decimal" step="0.1" min="0.8" max="3" aria-label="Trolling speed in miles per hour"><button id="spPlus" aria-label="Faster">+</button></div>
+          <div id="dropRows"></div><p class="fine" id="dropNote"></p></section>
+        <section><h2>No bites in 20 minutes?</h2><ol class="steps" id="change"></ol></section>
+        <section><p class="rule">Check the current <a href="https://wdfw.wa.gov/fishing/regulations" rel="noopener">WDFW rules and emergency changes</a> before you go. Salmon seasons, night closures and limits change during the year.</p>
+          <p class="fine"><button class="linkbtn" id="why">Why this plan</button></p></section>
+    </div>
+  </div>
+  <div id="matters" hidden></div>
+</div>
+
+<script>
+/* ---------- sun position (formulas after SunCalc / Meeus) ---------- */
+const RAD=Math.PI/180,DAY=864e5,J2000=2451545;
+const toDays=d=>d.valueOf()/DAY-.5+2440588-J2000;
+const obl=RAD*23.4397;
+const ra=(l,b)=>Math.atan2(Math.sin(l)*Math.cos(obl)-Math.tan(b)*Math.sin(obl),Math.cos(l));
+const dec=(l,b)=>Math.asin(Math.sin(b)*Math.cos(obl)+Math.cos(b)*Math.sin(obl)*Math.sin(l));
+const sidereal=(d,lw)=>RAD*(280.16+360.9856235*d)-lw;
+const solarM=d=>RAD*(357.5291+.98560028*d);
+function eclLon(M){return M+RAD*(1.9148*Math.sin(M)+.02*Math.sin(2*M)+.0003*Math.sin(3*M))+RAD*102.9372+Math.PI}
+function sunAlt(date,lat,lng){
+  const lw=RAD*-lng,phi=RAD*lat,d=toDays(date),L=eclLon(solarM(d));
+  const H=sidereal(d,lw)-ra(L,0),D=dec(L,0);
+  return Math.asin(Math.sin(phi)*Math.sin(D)+Math.cos(phi)*Math.cos(D)*Math.cos(H))/RAD;
+}
+
+/* ---------- color library ---------- */
+const C={silver:["Silver","#c6d0d4"],chrome:["Chrome","linear-gradient(135deg,#f5f7f8,#8fa1a8 55%,#eef2f3)"],gold:["Gold","#d4a12a"],white:["White","#fff"],pink:["Hot pink","#ff4f9a"],orange:["Orange","#f47a1f"],chart:["Chartreuse","#b9e000"],red:["Red","#d3202a"],purple:["Purple","#6b3fa0"],black:["Black","#191919"],blue:["Blue","#2a66c8"],glow:["Glow","#a7f5bb"],uv:["UV purple","#7d5cff"],fire:["Firetiger","linear-gradient(120deg,#b9e000 45%,#f47a1f 46% 70%,#1f6b3a 71%)"],perch:["Perch","linear-gradient(90deg,#c9b23a 25%,#3d5a2a 26% 40%,#c9b23a 41% 60%,#3d5a2a 61% 75%,#c9b23a 76%)"],shad:["Shad","linear-gradient(#59707d 35%,#dfe6e9 36%)"],trout:["Rainbow trout","linear-gradient(#556b3a 30%,#e0697f 31% 60%,#e3e8e5 61%)"],gp:["Green pumpkin","#5c6a2f"],wm:["Watermelon","#4f7f3d"],craw:["Craw","#a6552a"],olive:["Olive","#6d7332"],bb:["Black and blue","linear-gradient(90deg,#191919 55%,#2a66c8 56%)"],wc:["White and chartreuse","linear-gradient(90deg,#fff 50%,#b9e000 51%)"]};
+
+/* ---------- species data. d: bright-light depth, l: low-light depth, adj: season effect on rating ---------- */
+const P={
+trout:{tab:"Trout",kinds:["rainbow","mack"]},
+salmon:{tab:"Salmon",kinds:["koke","river"]},
+walleye:{tab:"Walleye",kinds:["walleye"]},
+bass:{tab:"Bass",kinds:["small","large"]}
+};
+const K={
+rainbow:{name:"Rainbow and cutthroat",base:[1,5,4,2,3,5],cold:45,hot:65,skyW:1,target:"55–65°F",
+ colors:{clearB:["silver","olive","gold"],clearL:["gold","black","orange"],stained:["orange","chart","gold"],muddy:["chart","orange","black"],deep:["chrome","glow","purple"],night:["black","glow","purple"]},
+ stages:[
+ {a:0,b:40,name:"Cold water, slow fish",d:[8,20],adj:-1,lures:[["Small spoon","Slow lift and flutter"],["Worm or PowerBait on a slip sinker","Sit it just off bottom"],["Small jig under a float","Barely moving"]],speed:"Slowest retrieve that keeps action",note:"The warmest afternoon hours usually beat dawn."},
+ {a:40,b:50,w:"up",name:"Spring warm-up",d:[0,12],adj:0,lures:[["Wedding Ring and worm","Long-line behind a small dodger"],["Small spinner","Count down, slow retrieve"],["Woolly Bugger or leech","Slow strips along shallow edges"]],speed:"Troll 1–1.5 mph",note:"Stocked fish cruise shorelines. Inlets and north-facing flats warm first in afternoon sun."},
+ {a:50,b:65,w:"up",name:"Prime spring feed",d:[0,15],adj:1,lures:[["Spinner or small spoon","Cast along drop-offs"],["Wedding Ring and worm","Long-line or light weight"],["Chironomid or dry fly","When you see rises"]],speed:"Troll 1.5–2.5 mph",note:"Water is near the preferred range, so fish spread shallow and chase."},
+ {a:65,b:72,name:"Stratified summer",d:[15,30],l:[5,18],adj:-1,lures:[["Dodger and worm or hoochie","Downrigger or lead-core to the cool layer"],["Spoon","At the depth where you read 55–63°F"],["Leech or balanced fly","Dawn and dusk edges"]],speed:"Troll 1.5–2 mph",note:"Trout usually hold just above the thermocline. Warm coves are empty."},
+ {a:72,b:99,name:"Too warm near the surface",d:[25,45],l:[15,30],adj:-2,lures:[["Downrigger spoon","Only in the cold layer"],["Dodger and worm","Stay above low-oxygen bottom"],["Move upstream or to a higher lake","Often the best choice"]],speed:"Troll 1.5–2 mph",note:"Near-lethal surface temperature. Skip shallow lakes and streams and release fish fast."},
+ {a:50,b:72,w:"down",name:"Fall cool-down",d:[0,18],adj:1,lures:[["Spoon or spinner","Cover shorelines and points"],["Streamer or leech","Strip near weed edges"],["Wedding Ring and worm","Slow troll"]],speed:"Troll 1.5–2.5 mph",note:"Fish return to the shallows as lakes cool."},
+ {a:40,b:50,w:"down",name:"Late fall",d:[0,15],adj:0,lures:[["Small spoon","Near shore"],["Worm or PowerBait","Near inlets"],["Leech pattern","Slow"]],speed:"Troll 1–1.5 mph",note:"Midday and afternoon warm-ups are worth the wait."}]},
+mack:{name:"Mackinaw",base:[1,4,4,3,3,3],cold:-9,hot:999,skyW:0,target:"45–52°F, on bottom",deep:1,
+ colors:{clearB:["white","glow","chrome"],clearL:["glow","white","chart"],stained:["chart","glow","white"],muddy:["glow","chart","white"],deep:["glow","white","chart"],night:["glow","white","chart"]},
+ stages:[
+ {a:0,b:53,w:"up",name:"Winter into spring, near-shore edges",d:[40,120],adj:1,lures:[["U-20 Flatfish, glow green","Ahead of a dropper, bumping bottom"],["5-inch white tube or swimbait, 1–2 oz","Lift and drop"],["Jigging spoon, 2–4 oz","Tap bottom every few drops"]],speed:"Troll about 1–1.5 mph, near bottom",note:"Winter and spring are steady seasons. Go early, before the wind."},
+ {a:53,b:66,w:"up",name:"Moving offshore",d:[80,150],adj:0,lures:[["Downrigger plug or spoon","Within a few feet of bottom"],["Jigging spoon, 2–4 oz","Marked fish on the graph"],["White tube","Vertical"]],speed:"Troll about 1–1.5 mph",note:"Fish slide deeper as the lake warms. Trust your graph over this range."},
+ {a:66,b:99,name:"Summer basin",d:[100,200],adj:-1,lures:[["Downrigger plug or spoon","Bottom-bump the deep basin"],["Heavy jig, 3–4 oz","Braid and a depth-counter reel"],["White tube","When you mark fish"]],speed:"Troll about 1–1.5 mph",note:"Surface temperature tells you little here. Fish the cold bottom layer."},
+ {a:0,b:66,w:"down",name:"Fall return to shallower water",d:[30,110],adj:1,lures:[["U-20 Flatfish, glow green","Along breaks"],["5-inch white tube","Rocky edges"],["Jigging spoon","Tight to bottom"]],speed:"Troll about 1–1.5 mph",note:"Fish return near shore as water cools. Some push as shallow as 10–30 ft."}]},
+koke:{name:"Kokanee",base:[0,5,4,3,2,3],cold:45,hot:65,skyW:.5,target:"about 54°F",sink:1,
+ colors:{clearB:["pink","orange","chart"],clearL:["pink","glow","uv"],stained:["orange","pink","chart"],muddy:["chart","orange","pink"],deep:["uv","glow","purple"],night:["glow","uv","pink"]},
+ stages:[
+ {m:[10,11,0,1,2],a:0,b:99,name:"Off season for most lakes",d:[20,60],adj:-3,lures:[["Small hoochie and corn","Slow, behind a small dodger"],["Micro spoon","Vertical on marked fish"],["Target mackinaw instead","Usually the better day"]],speed:"Troll 0.8–1.2 mph",note:"Adults leave Lake Chelan for tributaries from late October into November."},
+ {a:0,b:50,name:"Cold spring, shallow and slow",d:[5,25],adj:0,lures:[["Small hoochie and corn","Subtle side-to-side action"],["Small wedding-ring spinner","Behind a small dodger"],["Micro spoon","Slowest speed it still works"]],speed:"Troll 0.8–1.3 mph",note:"Below 50°F, faster gear gets ignored. Blades lose out to subtle lures."},
+ {a:50,b:60,name:"Shallow at first light, sinking with the sun",d:[5,30],adj:1,lures:[["Dodger and hoochie, tipped with corn","Leader about 6 inches for more action"],["Dodger and spinner","Try an S-curve"],["Spoon behind a small dodger","If they are chasing"]],speed:"Troll 1–1.5 mph",note:"Vary speed and turn. Strikes often come in the turns."},
+ {a:60,b:72,name:"Dropping with the warmth",d:[30,70],adj:0,lures:[["Larger dodger and spinner","Downrigger to about 54°F"],["Hoochie and corn","Just above marked fish"],["Spoon","Afternoons"]],speed:"Troll 1.2–1.6 mph",note:"Deeper means faster and a larger dodger. Lake Chelan fish can run shallower than normal, following plankton."},
+ {a:72,b:99,name:"Deep summer",d:[50,100],adj:-1,lures:[["Larger dodger and spinner","Downrigger, tight to the school"],["UV hoochie and corn","Low light at depth"],["Quit by mid-morning","Fish are deep and heat is on"]],speed:"Troll 1.2–1.6 mph",note:"Temperature at depth predicts location better than anything else."}]},
+river:{name:"Upriver kings and sockeye",base:[0,5,4,2,1,3],cold:-9,hot:66,skyW:.5,target:"cool Columbia water under the warm plume",
+ colors:{clearB:["pink","red","chrome"],clearL:["pink","glow","chart"],stained:["chart","pink","orange"],muddy:["chart","orange","glow"],deep:["glow","uv","chrome"],night:["glow","pink","chart"]},
+ stages:[
+ {m:[10,11,0,1,2,3,4],a:0,b:99,name:"Off season for upper Columbia summer runs",d:[15,50],adj:-4,lures:[["Target walleye or mackinaw","Better use of the day"],["Plug or spinner","Only where a season is open"],["Check the rules first","Seasons open by emergency rule"]],speed:"Not applicable",note:"Most of this tab is built for June through mid-October."},
+ {a:70,b:99,name:"Thermal barrier: fish stacked",d:[20,60],l:[8,30],adj:1,lures:[["Kings: Super Bait or spinner behind a flasher","Near the channel drop-off"],["Sockeye: bare red or pink hook behind a dodger","With shrimp scent, in shade lines"],["Plug-cut herring","Early, for kings"]],speed:"Troll 0.7–1.2 mph",note:"Fish hold in the cooler Columbia below the warm Okanogan. Start on kings and switch to sockeye as the sun rises."},
+ {a:62,b:70,name:"Fish moving through",d:[15,50],l:[8,30],adj:0,lures:[["Sockeye: red or pink hook behind a dodger","Slow, with scent"],["Kings: Super Bait or spinner","Along current seams"],["Change colors often","These fish strike more than they eat"]],speed:"Troll 0.7–1.2 mph",note:"No barrier yet, so fish keep going. Catch rates swing from limits to nothing."},
+ {a:0,b:62,name:"Cool river, fish traveling",d:[12,40],adj:-1,lures:[["Spinner or plug","Below dams and in slack edges"],["Super Bait","Same seams"],["Bare hook and dodger","Sockeye only"]],speed:"Troll 0.7–1.5 mph",note:"Cold pulses send fish upstream and stop the bite."}]},
+walleye:{name:"Walleye",base:[4,5,3,1,2,5],cold:45,hot:72,skyW:1.5,front:1,target:"65–70°F when you can find it",
+ colors:{clearB:["silver","perch","blue"],clearL:["perch","gold","fire"],stained:["fire","chart","gold"],muddy:["chart","orange","fire"],deep:["glow","chart","gold"],night:["black","glow","fire"]},
+ stages:[
+ {a:0,b:40,name:"Winter holes",d:[25,60],adj:-1,lures:[["Blade bait or heavy jig","Short lifts, tight to bottom"],["Bottom walker, 2–4 oz, and crawler","Just enough to creep"],["Jig and plastic","Dead-slow in eddies"]],speed:"0.3–0.6 mph or vertical",note:"Metabolism is low, so put it right in front of them. Take the afternoon if you can choose."},
+ {a:40,b:50,w:"up",name:"Pre-spawn and spawn",d:[8,25],l:[4,15],adj:0,lures:[["Jig and minnow or plastic","Slow, near gravel and current"],["Blade bait","Staging fish on breaks"],["Bottom walker and spinner","Find the depth first"]],speed:"0.5–0.8 mph",note:"Peak spawn is about 42–50°F. Spawning fish bite poorly, so target staging or finished fish."},
+ {a:50,b:60,w:"up",name:"Post-spawn feed",d:[10,25],l:[5,15],adj:1,lures:[["Worm harness on bottom bouncer","Line at about 45 degrees"],["Jig and plastic","Points and flats"],["Slim crankbait","Evening on flats"]],speed:"0.6–1.2 mph",note:"This is the best stretch for numbers as fish spread out to feed."},
+ {a:60,b:72,name:"Summer structure",d:[15,40],l:[5,15],adj:0,lures:[["Trolled crankbait","Flicker Shad or Flicker Minnow style"],["Worm harness","Bottom bouncer 2–4 oz in current"],["Slip bobber and leech","Rock piles at dusk"]],speed:"Cranks 1.8–2.5 mph, harness 0.6–1.2",note:"Bright sun pushes fish deep. Clouds or wind chop bring them up all day."},
+ {a:72,b:99,name:"Hot water, night bite",d:[25,45],l:[6,18],adj:-1,lures:[["Trolled crankbait","After dark on flats"],["Slip bobber and leech","Dusk, rock humps"],["Worm harness","Deep breaks by day"]],speed:"Cranks 1.5–2.2 mph",note:"Fish get choosy above about 75°F. Plan on dusk through the night."},
+ {a:55,b:72,w:"down",name:"Early fall feed",d:[12,30],l:[5,15],adj:1,lures:[["Crankbait","Points and flats"],["Jig and plastic","Breaks next to bait"],["Worm harness","While crawlers still work"]],speed:"0.8–2.2 mph by lure",note:"During turnover fish can be at almost any depth. Move until you mark them."},
+ {a:40,b:55,w:"down",name:"Late fall drop",d:[20,50],l:[8,20],adj:1,lures:[["Blade bait","Vertical on steep breaks"],["Jig and minnow","Slow, tight to bottom"],["Bottom walker and crawler","2–4 oz to stay down"]],speed:"0.4–0.8 mph",note:"Fish hold on steep structure close to shallow food. Big fish time."}]},
+small:{name:"Smallmouth",base:[1,4,4,3,3,4],cold:52,hot:78,skyW:1,front:1,target:"67–71°F",
+ colors:{clearB:["gp","shad","craw"],clearL:["black","white","gp"],stained:["craw","chart","wc"],muddy:["chart","bb","fire"],deep:["gp","shad","uv"],night:["black","bb","white"]},
+ stages:[
+ {a:0,b:45,name:"Winter bluffs",d:[25,50],adj:-2,lures:[["Blade bait","Short hops"],["Hair jig","Barely moving"],["Drop-shot","On marked fish"]],speed:"Dead-slow",note:"Fish the warmest part of the afternoon."},
+ {a:45,b:55,w:"up",name:"Pre-spawn",d:[8,20],adj:1,lures:[["Suspending jerkbait","Long pauses"],["Tube or Ned rig","Rock and gravel transitions"],["Blade bait","Colder days"]],speed:"Slow with long pauses",note:"Around 53–55°F is the big-fish window. Smallmouth bite earlier than largemouth."},
+ {a:55,b:65,w:"up",name:"Spawn",d:[4,15],adj:0,lures:[["Tube or Ned rig","Gravel next to boulders or wood"],["Drop-shot","Clear water, deeper beds"],["Soft jerkbait","Windy flats"]],speed:"Slow, on bottom",note:"In clear lakes beds can be 6 ft or deeper. Release nesting fish on the spot or leave them be."},
+ {a:65,b:72,name:"Post-spawn into summer",d:[5,20],l:[1,8],adj:1,lures:[["Walking topwater","Dawn, dusk, flat calm"],["Swimbait","Points in wind"],["Drop-shot","Bright sun"]],speed:"Medium",note:"Fish are near their preferred range and feeding hard."},
+ {a:72,b:99,name:"Summer offshore",d:[15,35],l:[3,12],adj:0,lures:[["Drop-shot","Humps and rock piles"],["Tube","Dragged slow"],["Topwater","First hour of light"]],speed:"Slow by day",note:"Shallow at first light, offshore once the sun is up."},
+ {a:55,b:72,w:"down",name:"Fall feed",d:[5,20],l:[2,10],adj:1,lures:[["Swimbait or jerkbait","Points near bait"],["Walking topwater","While water is above 60°F"],["Tube","If fish go tight"]],speed:"Medium",note:"Fish group tightly. Catch one and stay on the spot."},
+ {a:45,b:55,w:"down",name:"Late fall",d:[15,40],adj:0,lures:[["Blade bait","Steep breaks"],["Hair jig","Slow"],["Jerkbait","Warm afternoons"]],speed:"Slow",note:"Fish slide to steep breaks. Afternoons get better."}]},
+large:{name:"Largemouth",base:[2,4,3,2,3,5],cold:55,hot:82,skyW:1,front:1,target:"68–78°F",
+ colors:{clearB:["wm","shad","gp"],clearL:["black","white","wm"],stained:["bb","wc","craw"],muddy:["bb","chart","red"],deep:["gp","bb","shad"],night:["black","bb","purple"]},
+ stages:[
+ {a:0,b:45,name:"Winter, deep and slow",d:[15,30],adj:-2,lures:[["Jig and trailer","Crawl it"],["Blade bait","Short hops"],["Drop-shot","Marked fish"]],speed:"Dead-slow",note:"Slowest species of the four in cold water. Short afternoon windows."},
+ {a:45,b:55,w:"up",name:"Pre-spawn",d:[2,12],adj:1,lures:[["Lipless crank","Rip it off new weeds"],["Suspending jerkbait","Long pauses"],["Jig","Wood and first breaks"]],speed:"Slow to medium",note:"Warmest coves first, usually on the north and northwest sides."},
+ {a:55,b:68,w:"up",name:"Spawn",d:[1,6],adj:0,lures:[["Texas-rigged creature bait","Pitch to cover"],["Stick worm, weightless","Let it fall"],["Lizard","Around beds"]],speed:"Slow",note:"Beds are usually 1–6 ft in protected flats. Release spawners right where you caught them."},
+ {a:68,b:76,name:"Post-spawn into summer",d:[4,12],l:[1,5],adj:1,lures:[["Frog or popper","Pads and weed edges at low light"],["Swim jig","Grass lines"],["Texas rig","Punch cover at midday"]],speed:"Medium",note:"Dusk is usually the top window. Weeds beat open water."},
+ {a:76,b:99,name:"Summer heat",d:[8,20],l:[1,6],adj:0,lures:[["Texas rig or jig","Shade and weed edges"],["Frog","Heavy cover, first and last light"],["Deep crankbait","Outer edges"]],speed:"Slow by day",note:"Shade and cover hold fish at midday. Overcast opens up the day."},
+ {a:55,b:76,w:"down",name:"Fall feed",d:[3,15],l:[1,6],adj:1,lures:[["Spinnerbait or swim jig","Follow the bait into creeks and coves"],["Squarebill","Wood and rock"],["Topwater","Warm evenings"]],speed:"Medium to fast",note:"Find the baitfish first."},
+ {a:45,b:55,w:"down",name:"Late fall",d:[10,25],adj:-1,lures:[["Jig","Last green weeds and breaks"],["Lipless crank","Slow-rolled"],["Jerkbait","Warm afternoons"]],speed:"Slow",note:"Fish slow down fast below 50°F."}]}
+};
+
+/* ---------- setups. r: reachable depth, t: useful surface temp, low: 1 wants low light, mud: effect in muddy water, c: color rows ---------- */
+const SPOON={clearB:["silver","gold","blue"],clearL:["gold","chart","black"],stained:["gold","chart","orange"],muddy:["chart","orange","gold"],deep:["chrome","glow","uv"]};
+const TOP={clearB:["white","shad","black"],clearL:["black","white","shad"],stained:["black","white","chart"],muddy:["black","chart","white"],deep:["white","black","shad"],night:["black","white","bb"]};
+const FLY={clearB:["olive","black","craw"],clearL:["black","olive","purple"],stained:["black","olive","red"],muddy:["black","chart","red"],deep:["black","olive","purple"],night:["black","purple","olive"]};
+const BAIT={clearB:["chart","orange","pink"],clearL:["chart","pink","orange"],stained:["chart","orange","pink"],muddy:["chart","orange","red"],deep:["chart","orange","glow"],night:["glow","chart","orange"]};
+const BLADE={clearB:["silver","perch","gold"],clearL:["gold","chart","fire"],stained:["gold","fire","chart"],muddy:["chart","fire","orange"],deep:["chart","glow","gold"],night:["glow","chart","black"]};
+const CRANK={clearB:["perch","shad","silver"],clearL:["fire","perch","gold"],stained:["fire","chart","orange"],muddy:["chart","fire","orange"],deep:["chart","fire","glow"],night:["black","fire","glow"]};
+const JIGP={clearB:["white","perch","chart"],clearL:["chart","white","fire"],stained:["chart","orange","white"],muddy:["chart","orange","black"],deep:["chart","glow","white"],night:["glow","chart","black"]};
+const SHAD={clearB:["shad","silver","perch"],clearL:["shad","white","fire"],stained:["wc","chart","fire"],muddy:["chart","wc","bb"],deep:["shad","chrome","uv"],night:["black","white","bb"]};
+const DARK={clearB:["gp","wm","craw"],clearL:["black","bb","gp"],stained:["bb","craw","gp"],muddy:["bb","black","red"],deep:["gp","bb","craw"],night:["black","bb","purple"]};
+const SOCK={clearB:["red","pink","chrome"],clearL:["pink","red","glow"],stained:["pink","chart","orange"],muddy:["chart","pink","orange"],deep:["glow","red","uv"],night:["glow","pink","red"]};
+const KING={clearB:["chrome","chart","pink"],clearL:["chart","chrome","glow"],stained:["chart","orange","pink"],muddy:["chart","orange","glow"],deep:["glow","chrome","chart"],night:["glow","chart","pink"]};
+const T={
+cast:{n:"Casting spoons and spinners",r:[0,20],t:[42,72],mud:-1,sp:"Steady retrieve, count down to depth",lu:[["Inline spinner","Slow enough to feel the blade"],["Casting spoon","Flutter it on the drop"]],c:SPOON},
+drop:{n:"Trolling, drop weight",r:[3,60],t:[32,90],mud:0,sp:"Set speed below",lu:[["Spoon or spinner","Clip weight a few feet ahead"]]},
+longline:{n:"Trolling, long-line",r:[0,20],t:[42,72],mud:0,sp:"Troll 1.5–2.5 mph",lu:[["Wedding Ring and worm","Far behind the boat"],["Small spoon or Needlefish","Add a split shot to get down"]]},
+leadcore:{n:"Trolling, lead-core or divers",r:[15,50],t:[38,80],mud:0,sp:"Troll 1.5–2 mph",lu:[["Dodger and worm or hoochie","Count colors to reach depth"],["Spoon","Run it behind a diver"]]},
+rigger:{n:"Trolling, downrigger",r:[10,250],t:[32,90],mud:0,sp:"Troll 1–2 mph, set to the fish",lu:[["Spoon or plug","Clip to the depth on your graph"],["Dodger and bait","Just above marked fish"]]},
+fly:{n:"Fly rod",r:[0,20],t:[42,68],mud:-2,sp:"Slow strips or static under an indicator",lu:[["Leech or Woolly Bugger","Slow strips on edges"],["Chironomid","Hang under an indicator"]],c:FLY},
+bait:{n:"Still fishing with bait",r:[0,40],t:[35,68],mud:1,sp:"Stationary, just off bottom",lu:[["PowerBait on a slip sinker","Floats just off bottom"],["Nightcrawler","Inflate it with a worm blower"]],c:BAIT},
+slipbob:{n:"Slip bobber",r:[2,30],t:[45,85],mud:-1,sp:"Stationary, set stop just above bottom",lu:[["Leech or crawler on a small jig","Rock piles and weed edges"],["Minnow","Where legal"]]},
+vjig:{n:"Vertical jigging",r:[15,250],t:[32,90],mud:-1,sp:"Lift, drop, stay in touch with bottom",lu:[["Jigging spoon, 1–4 oz","Heavier as you go deeper"],["Bar jig","Short lifts on marked fish"]]},
+tube:{n:"Tube or Ned rig",r:[2,60],t:[42,85],mud:-1,sp:"Slow drag along bottom",lu:[["Tube on an internal jig","Hop and drag"],["Ned rig","Barely shake it"]]},
+dropshot:{n:"Drop-shot",r:[8,60],t:[42,90],mud:-2,sp:"Shake in place on marked fish",lu:[["Drop-shot minnow or worm","Leader 8–18 inches"],["Small finesse worm","Clear water, bright sun"]]},
+jerk:{n:"Jerkbait",r:[2,12],t:[42,66],mud:-2,sp:"Jerk twice, then pause",lu:[["Suspending jerkbait","Longer pauses when cold"],["Soft jerkbait","Warmer water, less weight"]],c:SHAD},
+swim:{n:"Swimbait or spinnerbait",r:[2,20],t:[50,85],mud:1,sp:"Steady, just above cover",lu:[["Paddle-tail swimbait","Points and bait schools"],["Spinnerbait","Add vibration in stain"]],c:SHAD},
+crank:{n:"Crankbait",r:[2,30],t:[50,90],mud:1,sp:"Cast or troll 1.8–2.5 mph",lu:[["Medium diver","Tick the bottom"],["Lipless crank","Rip it off weeds"]]},
+topwater:{n:"Topwater",r:[0,8],t:[60,90],low:1,mud:-2,sp:"Walk or pop, pause near cover",lu:[["Walking bait","Calm mornings"],["Popper or frog","Weed edges and pads"]],c:TOP},
+texas:{n:"Texas rig",r:[1,25],t:[50,92],mud:0,sp:"Pitch to cover, slow hops",lu:[["Creature bait","Weeds and wood"],["Stick worm","Weightless in shallow cover"]],c:DARK},
+jig:{n:"Bass jig",r:[1,35],t:[38,90],mud:0,sp:"Crawl and hop along bottom",lu:[["Jig and craw trailer","Wood and rock"],["Swim jig","Grass lines"]],c:DARK},
+blade:{n:"Blade bait",r:[8,60],t:[32,55],mud:0,sp:"Short lifts, tight to bottom",lu:[["Blade bait, 3/8–3/4 oz","Lift, let it fall on a tight line"],["Jigging spoon","When fish are stacked"]],c:BLADE},
+bouncer:{n:"Bottom bouncer and harness",r:[8,70],t:[46,85],mud:1,sp:"0.5–1.2 mph, line at about 45 degrees",lu:[["Worm harness","2–4 oz bouncer in current"],["Spinner and Slow Death hook","When fish are picky"]],c:BLADE},
+jighead:{n:"Jig and plastic or minnow",r:[3,60],t:[32,75],mud:0,sp:"Slow hops near bottom",lu:[["Jig and paddle-tail","Near breaks and current"],["Jig and minnow","Cold water"]],c:JIGP},
+trollcrank:{n:"Trolling crankbaits",r:[5,35],t:[55,85],mud:1,sp:"Troll 1.8–2.5 mph",lu:[["Flicker Shad or Minnow","Match diving depth to the fish"],["Deep minnow bait","Flats after dark"]],c:CRANK},
+dodger:{n:"Dodger and hoochie or spinner",r:[0,120],t:[40,85],mud:0,sp:"Troll 1–1.5 mph",lu:[["Dodger and hoochie, corn tipped","Short leader"],["Dodger and spinner","Faster and deeper"]]},
+flat:{n:"Flat-line small spoons",r:[0,20],t:[42,62],mud:-1,sp:"Troll 0.8–1.3 mph",lu:[["Micro spoon","Far behind the boat"],["Small hoochie and corn","Subtle action"]]},
+kings:{n:"Kings: Super Bait or spinner",r:[10,60],t:[50,85],mud:0,sp:"Troll 1–1.5 mph",lu:[["Super Bait behind a flasher","Tuna scent"],["Spinner behind a flasher","Along the channel"]],c:KING},
+sock:{n:"Sockeye: dodger and bare hook",r:[5,35],t:[50,85],mud:-1,sp:"Troll 0.7–1.2 mph",lu:[["Red or pink hooks behind a dodger","Shrimp scent, shade lines"],["Small hoochie","When hooks go quiet"]],c:SOCK},
+plug:{n:"Plugs",r:[5,40],t:[45,75],mud:0,sp:"Back-troll or slow troll",lu:[["Wrapped plug","Seams and slack edges"],["Plug-cut herring","Early for kings"]]}
+};
+const DROP_OZ=[[.5,.12],[1,.19],[1.5,.25],[2,.30],[3,.44],[4,.55]];
+const OZ_LABEL={.5:"½ oz",1:"1 oz",1.5:"1½ oz",2:"2 oz",3:"3 oz",4:"4 oz"};
+/* feet of depth per foot of line. Anchored to inline-weight data at 1.5 mph on mono; slower runs deeper, faster shallower */
+function dropRatio(oz,mph){return Math.min(.7,(DROP_OZ.find(x=>x[0]===oz)||DROP_OZ[1])[1]*Math.pow(1.5/mph,1.235))}
+const dropLine=(oz,mph,depth)=>Math.round(depth/dropRatio(oz,mph)/5)*5;
+const MAX_LINE=150;
+function dropReach(mph){const list=(S.drop&&S.drop.oz&&S.drop.oz.length)?S.drop.oz:[2];return Math.round(Math.max(...list.map(o=>dropRatio(o,mph)))*MAX_LINE)}
+function dropSpeed(stage){if(S.drop&&S.drop.speed)return S.drop.speed;const m=(stage.speed||"").match(/(\d(?:\.\d+)?)\s*[–-]\s*(\d(?:\.\d+)?)/);return m?Math.round((+m[1]+ +m[2])/2*10)/10:1.5}
+const DROP_LU={rainbow:[["Wedding Ring and worm","Keel weight stops line twist"],["Dodger and worm","Short leader behind the dodger"]],koke:[["Dodger and hoochie, corn tipped","Short leader behind the dodger"],["Dodger and spinner","Faster and deeper"]],mack:[["U-20 Flatfish, glow green","Only on shallow spring and fall fish"],["Spoon","Bump bottom now and then"]],river:[["Red or pink hooks behind a dodger","Slow, with shrimp scent"],["Super Bait behind a flasher","Kings, early"]]};
+const KIT={rainbow:{drop:3,longline:3,cast:3,leadcore:2,rigger:2,fly:2,bait:2,slipbob:2},mack:{rigger:3,vjig:3,tube:2,leadcore:1,drop:1},koke:{dodger:3,drop:3,flat:2,leadcore:2,vjig:1},river:{sock:3,kings:3,drop:2,plug:2,cast:1},walleye:{bouncer:3,jighead:3,trollcrank:3,blade:2,slipbob:2},small:{tube:3,dropshot:3,jerk:3,swim:3,topwater:2,blade:2,crank:2,vjig:1},large:{texas:3,jig:3,topwater:3,swim:3,crank:2,jerk:2,dropshot:1}};
+const MACK_LU={rigger:{lu:[["U-20 Flatfish, glow green","Dropper weight, near bottom"],["Spoon","Within a few feet of bottom"]],sp:"Troll about 1–1.5 mph",c:{clearB:["glow","white","chrome"]}},vjig:{lu:[["Jigging spoon, 2–4 oz","Braid, tap bottom"],["Bar jig","On marked fish"]]},tube:{n:"White tube or swimbait",r:[20,200],t:[32,90],lu:[["5-inch white tube","Lift and drop"],["White swimbait, 1–2 oz","Slow rolls near bottom"]]}};
+const MAP=[[/bottom (bouncer|walker)|harness|crawler$/i,["bouncer"]],[/slip bobber|float/i,["slipbob"]],[/blade bait/i,["blade"]],[/jigging spoon|heavy jig|hair jig/i,["vjig"]],[/tube|ned/i,["tube"]],[/drop-shot/i,["dropshot"]],[/topwater|frog|popper/i,["topwater"]],[/jerkbait/i,["jerk"]],[/trolled crank/i,["trollcrank"]],[/lipless|squarebill|crankbait/i,["crank","trollcrank"]],[/swim|spinnerbait/i,["swim","jig"]],[/texas|stick worm|creature|lizard/i,["texas"]],[/^jig|and plastic/i,["jighead","jig"]],[/leech|woolly|chironomid|streamer|fly/i,["fly"]],[/^kings/i,["kings"]],[/^sockeye|hook/i,["sock"]],[/flatfish|downrigger/i,["rigger"]],[/plug|herring/i,["plug","rigger"]],[/dodger|hoochie|wedding/i,["dodger","longline","leadcore","rigger"]],[/powerbait|worm or/i,["bait"]],[/spinner|spoon/i,["cast","flat","rigger"]]];
+let STAGE_FOR_DROP=null;
+function setupOf(k,id){const m=(k==="mack"&&MACK_LU[id])||{},o=Object.assign({},T[id],m,{id});if(id==="drop"){o.r=[3,dropReach(STAGE_FOR_DROP?dropSpeed(STAGE_FOR_DROP):1.5)];if(DROP_LU[k])o.lu=DROP_LU[k]}return o}
+function overlap(a,b){return Math.max(0,Math.min(a[1],b[1])-Math.max(a[0],b[0]))}
+function stageSetup(k,name,d){
+  const kit=KIT[k];
+  for(const [re,ids] of MAP){if(!re.test(name))continue;
+    const have=ids.filter(i=>kit[i]);if(!have.length)continue;
+    return have.find(i=>{const o=setupOf(k,i);return d[0]>=o.r[0]&&d[1]<=o.r[1]})||have.find(i=>overlap(setupOf(k,i).r,d)>0)||have[0]}
+  return null;
+}
+function rateSetup(k,id,stage,d,t,per,sky,clar){
+  STAGE_FOR_DROP=stage;
+  const o=setupOf(k,id),span=Math.max(1,d[1]-d[0]),reach=overlap(o.r,d)/span,low=["night","dawn","dusk"].includes(per)||sky==="cloud",why=[];
+  let v=40+KIT[k][id]*12;
+  if(reach===0){why.push(`Can't reach ${d[0]}–${d[1]} ft`);v=Math.min(v,12)}
+  else if(reach<.5){v-=22;why.push(`Only reaches part of the ${d[0]}–${d[1]} ft zone`)}
+  else if(reach<1)v-=8;
+  if(t<o.t[0]){v-=25;why.push("Water is too cold for it")}
+  if(t>o.t[1]){v-=25;why.push("Water is too warm for it")}
+  if(o.low){if(low)v+=8;else{v-=18;why.push("Works best in low light")}}
+  if(clar==="muddy"){v+=(o.mud||0)*10;if((o.mud||0)<0)why.push("Fish won't find it easily in muddy water")}
+  if(clar==="stained"&&(o.mud||0)<=-2)v-=8;
+  stage.lures.forEach((l,i)=>{if(stageSetup(k,l[0],d)===id)v+=[24,14,8][i]});
+  return {id,v:Math.max(5,Math.min(98,Math.round(v))),why};
+}
+function rankSetups(k,stage,d,t,per,sky,clar){
+  const r=Object.keys(KIT[k]).map(id=>rateSetup(k,id,stage,d,t,per,sky,clar)).sort((a,b)=>b.v-a.v);
+  for(const l of stage.lures){const m=stageSetup(k,l[0],d),i=r.findIndex(x=>x.id===m);if(i<0)continue;if(r[i].v>=58){r.unshift(r.splice(i,1)[0]);break}}
+  return r;
+}
+const sameLure=(a,b)=>/popper|frog/i.test(a)&&/popper|frog/i.test(b)&&a.split(" ").length<=3;
+const fitWord=v=>v>=75?"Excellent":v>=58?"Good":v>=38?"Workable":"Poor";
+
+/* rough surface estimate for north-central Washington */
+const EST=[38,38,41,46,52,60,68,70,64,55,47,41];
+const PERIODS=["night","dawn","morning","midday","afternoon","dusk"];
+
+function noonOf(date,lat,lng){let best=date,mx=-99;const s=new Date(date);s.setHours(0,0,0,0);for(let i=0;i<288;i++){const x=new Date(+s+i*3e5),a=sunAlt(x,lat,lng);if(a>mx){mx=a;best=x}}return best}
+function periodAt(date,lat,lng,noon){
+  const alt=sunAlt(date,lat,lng),before=date<noon;
+  if(alt<-6)return "night";
+  if(alt<8)return before?"dawn":"dusk";
+  const h=Math.abs(date-noon)/36e5;
+  return h<=2?"midday":before?"morning":"afternoon";
+}
+function pickStage(k,t,month){
+  const up=month<=5;
+  return K[k].stages.find(s=>(s.m?s.m.includes(month):true)&&t>=s.a&&t<s.b&&(!s.w||(s.w==="up")===up))||K[k].stages[K[k].stages.length-1];
+}
+function shape(k,per,t,sky,clar){
+  const p=K[k];let i=PERIODS.indexOf(per),v=p.base[i];
+  if(v===0)return 0;
+  if(t<p.cold)v+={night:-1,dawn:-2,morning:-1,midday:1.5,afternoon:2,dusk:-1}[per];
+  if(t>p.hot)v+={night:1,dawn:.5,morning:-.5,midday:-1.5,afternoon:-1.5,dusk:.5}[per];
+  if(sky==="cloud"&&["morning","midday","afternoon"].includes(per))v+=p.skyW;
+  if(sky==="front")v-=p.front?1:.5;
+  if(clar==="muddy")v+=(k==="walleye"&&per==="midday")?.5:-.5;
+  return v;
+}
+function score(k,per,t,sky,clar,stage){
+  const v=shape(k,per,t,sky,clar);
+  return v===0?0:Math.max(.2,Math.min(5,v+stage.adj));
+}
+const word=v=>v>=4?"Prime":v>=3?"Good":v>=2?"Fair":"Slow";
+function dayScores(k,base,lat,lng,t,sky,clar,stage){
+  const s=new Date(base);s.setHours(0,0,0,0);const noon=noonOf(base,lat,lng),out=[];
+  for(let i=0;i<96;i++){const x=new Date(+s+i*9e5);{const pe=periodAt(x,lat,lng,noon);out.push({x,v:score(k,pe,t,sky,clar,stage),s:shape(k,pe,t,sky,clar)})}}
+  return out;
+}
+function windows(sc){
+  const mx=Math.max(...sc.map(o=>o.s)),cut=mx-.45,out=[];let c=null;
+  sc.forEach(o=>{if(o.s>=cut){if(!c){c={a:o.x,b:o.x}}c.b=new Date(+o.x+9e5)}else if(c){out.push(c);c=null}});
+  if(c)out.push(c);
+  return out.sort((p,q)=>(q.b-q.a)-(p.b-p.a)).slice(0,2).sort((p,q)=>p.a-q.a);
+}
+function depthFor(k,stage,per,sky,date,lat,lng){
+  let low=["night","dawn","dusk"].includes(per)||sky==="cloud",d=(low&&stage.l)?stage.l:stage.d;
+  if(K[k].sink&&!stage.m&&!["night"].includes(per)){
+    const s=new Date(date);s.setHours(0,0,0,0);let rise=null;
+    for(let i=0;i<288;i++){const x=new Date(+s+i*3e5);if(sunAlt(x,lat,lng)>-.8){rise=x;break}}
+    if(rise&&date>rise){const add=Math.min(25,Math.round((date-rise)/36e5*10/5)*5);d=[d[0]+add,Math.min(120,d[1]+add)]}
+  }
+  return d;
+}
+function colorRow(p,clar,per,sky,depth){
+  const low=["dawn","dusk"].includes(per)||sky==="cloud";
+  if(clar==="muddy")return "muddy";
+  if(per==="night")return "night";
+  if(depth[0]>=30||(p.deep&&depth[0]>=25))return "deep";
+  if(clar==="stained")return "stained";
+  return low?"clearL":"clearB";
+}
+const COLOR_WHY={clearB:"Clear water and bright light: start natural. Fish get a good look.",clearL:"Clear water in low light: start with contrast or a strong silhouette.",stained:"Stained water shifts light toward red and yellow, so brights show up best.",muddy:"Muddy water: use the loudest color you own and add vibration or scent.",deep:"Red fades to gray by roughly 15–25 ft in clear water. Use glow, UV or a dark silhouette, and let a flasher or dodger do the attracting.",night:"At night fish see shape more than color. Dark silhouette first, glow second."};
+const fmt=d=>d.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
+
+/* ---------- live conditions ---------- */
+const GAUGES=[{id:"USGS-12447200",name:"Okanogan River at Malott",lat:48.2813,lng:-119.7045,km:15},{id:"USGS-12462500",name:"Wenatchee River at Monitor",lat:47.4993,lng:-120.4245,km:10}];
+function km(a,b,c,d){const x=(d-b)*RAD*Math.cos((a+c)/2*RAD),y=(c-a)*RAD;return Math.hypot(x,y)*6371}
+function hourIndex(w,date){const p=n=>String(n).padStart(2,"0");return w.time.indexOf(`${date.getFullYear()}-${p(date.getMonth()+1)}-${p(date.getDate())}T${p(date.getHours())}:00`)}
+function skyFrom(w,i){
+  const cloud=w.cloud_cover[i],wind=w.wind_speed_10m[i],j=i-24;
+  if(j>=0&&cloud<50&&w.temperature_2m[j]-w.temperature_2m[i]>=10&&w.pressure_msl[i]-w.pressure_msl[j]>=4)return "front";
+  return cloud>=70||wind>=10?"cloud":"sun";
+}
+function lakeEstimate(w,i){
+  const from=Math.max(0,i-336);if(i-from<72)return null;
+  const a=w.temperature_2m.slice(from,i+1).filter(v=>v!=null);if(a.length<72)return null;
+  const mean=a.reduce((x,y)=>x+y,0)/a.length;
+  return Math.max(39,Math.min(76,Math.round(.75*mean+10)));
+}
+function ago(ms){const m=Math.round(ms/6e4);return m<60?`${m} min ago`:`${Math.round(m/60)} hr ago`}
+function gaugeFor(k){
+  if(k==="river")return GAUGES[0];
+  return GAUGES.find(g=>km(S.lat,S.lng,g.lat,g.lng)<=g.km)||null;
+}
+/* picks the temperature: your reading, then a live gauge, then an air-based estimate, then a monthly guess */
+function waterTemp(k,date){
+  if(S.temp!==""&&!isNaN(+S.temp))return {t:+S.temp,src:"you"};
+  const g=gaugeFor(k),r=g&&D.gauges[g.id],now=Date.now();
+  if(r&&Math.abs(date-now)<864e5&&now-r.at<36*36e5)return {t:r.f,src:"gauge",text:`Live: ${g.name}, ${ago(now-r.at)}.`};
+  if(D.w){const i=hourIndex(D.w,date);if(i>=0){const e=lakeEstimate(D.w,i);if(e!=null)return {t:e,src:"est",text:"Estimated from 2 weeks of air temperature."}}}
+  return {t:EST[date.getMonth()],src:"month",text:"Rough guess for this month."};
+}
+function skyNow(date){
+  if(S.sky)return {sky:S.sky,src:"you"};
+  if(D.w){const i=hourIndex(D.w,date);if(i>=0)return {sky:skyFrom(D.w,i),src:"forecast",i}}
+  return {sky:"sun",src:"none"};
+}
+let D={w:null,at:0,lat:null,lng:null,gauges:{}},status="";
+try{D=Object.assign(D,JSON.parse(localStorage.getItem("biteData")||"{}"))}catch(e){}
+const saveD=()=>{try{localStorage.setItem("biteData",JSON.stringify(D))}catch(e){}};
+async function getJSON(url){
+  const c=new AbortController(),tm=setTimeout(()=>c.abort(),12000);
+  try{const r=await fetch(url,{signal:c.signal});if(!r.ok)throw new Error(r.status);return await r.json()}finally{clearTimeout(tm)}
+}
+function position(fresh){return new Promise((ok,no)=>{if(!navigator.geolocation)return no();navigator.geolocation.getCurrentPosition(ok,no,fresh?{timeout:20000,maximumAge:0,enableHighAccuracy:true}:{timeout:12000,maximumAge:3e5})})}
+async function loadWeather(){
+  const url=`https://api.open-meteo.com/v1/forecast?latitude=${S.lat.toFixed(3)}&longitude=${S.lng.toFixed(3)}&hourly=temperature_2m,cloud_cover,wind_speed_10m,pressure_msl&past_days=14&forecast_days=7&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`;
+  const j=await getJSON(url);D.w=j.hourly;D.at=Date.now();D.lat=S.lat;D.lng=S.lng;
+}
+async function loadGauge(g){
+  const j=await getJSON(`https://api.waterdata.usgs.gov/ogcapi/v1/collections/latest-continuous/items?f=json&monitoring_location_id=${g.id}&parameter_code=00010&limit=5`);
+  const a=(j.features||[]).map(x=>x.properties).filter(p=>p&&p.value!=null&&!isNaN(+p.value)).sort((p,q)=>new Date(q.time)-new Date(p.time))[0];
+  if(a){const c=+a.value;D.gauges[g.id]={f:Math.round(c*9/5+32),at:+new Date(a.time)}}
+}
+let busy=false,again=false,skyOpen=false,tempOpen=false;
+function lockBtn(on){$("gps").disabled=on;$("gps").textContent=on?"Updating location":"Update location"}
+async function refresh(force){
+  if(busy){if(force)again=true;return}
+  busy=true;let loc="";if(force)lockBtn(true);
+  try{const p=await position(force);S.lat=p.coords.latitude;S.lng=p.coords.longitude;S.place="your location";save()}
+  catch(e){loc=`Location is off, so conditions are for ${S.place}. Allow location in your browser settings to use your spot. `}
+  const moved=D.lat==null||km(S.lat,S.lng,D.lat,D.lng)>2,stale=Date.now()-D.at>18e5;
+  const jobs=[];
+  if(force||moved||stale||!D.w)jobs.push(loadWeather().then(()=>1,()=>0));
+  const need=new Set([GAUGES[0]]),near=GAUGES.find(g=>km(S.lat,S.lng,g.lat,g.lng)<=g.km);if(near)need.add(near);
+  need.forEach(g=>jobs.push(loadGauge(g).catch(()=>0)));
+  const res=await Promise.all(jobs);busy=false;saveD();
+  status=loc+(D.w?(res[0]===0&&(force||moved||stale)?`No connection. Showing weather from ${ago(Date.now()-D.at)}.`:`Conditions updated ${fmt(new Date(D.at))}.`):"Weather isn't available yet. Tap your sky and enter a water temperature.");
+  lockBtn(false);render();
+  if(again){again=false;refresh(true)}
+}
+
+/* ---------- state and rendering ---------- */
+const defaults={tab:"trout",kind:{trout:"rainbow",salmon:"koke",walleye:"walleye",bass:"small"},temp:"",clar:"clear",sky:null,live:true,setup:{},drop:{oz:[1,2],speed:null},when:null,lat:47.84,lng:-120.02,place:"the Lake Chelan area"};
+let S=Object.assign({},defaults);
+try{S=Object.assign(S,JSON.parse(localStorage.getItem("bite2")||"{}"));S.kind=Object.assign({},defaults.kind,S.kind);S.setup=S.setup||{};S.drop=Object.assign({oz:[1,2],speed:null},S.drop)}catch(e){}
+const save=()=>{try{localStorage.setItem("bite2",JSON.stringify(S))}catch(e){}};
+const $=id=>document.getElementById(id);
+const bg=v=>{const f=v/5;return v<1.5?"#dbe6e4":v<2.5?"#f7dd95":v<3.5?"#f2b632":v<4.3?"#ee7c34":"#e5481c"};
+const nowDate=()=>S.live||!S.when?new Date():new Date(S.when);
+function pad(n){return String(n).padStart(2,"0")}
+
+function seg(id,opts,key,cur){
+  $(id).innerHTML="";
+  opts.forEach(([v,t])=>{const b=document.createElement("button");b.textContent=t;b.setAttribute("aria-pressed",(cur===undefined?S[key]:cur)===v);b.onclick=()=>{S[key]=v;save();render()};$(id).append(b)});
+}
+function render(){
+  const tabs=Object.keys(P);
+  $("tabs").innerHTML="";
+  tabs.forEach(t=>{const b=document.createElement("button");b.textContent=P[t].tab;b.setAttribute("role","tab");b.setAttribute("aria-selected",S.tab===t);b.onclick=()=>{S.tab=t;save();render();scrollTo(0,0)};$("tabs").append(b)});
+  const isM=S.tab==="matters";$("fishing").hidden=isM;$("matters").hidden=!isM;
+  if(isM){renderMatters();return}
+  const kinds=P[S.tab].kinds;$("subs").hidden=kinds.length<2;$("subs").style.display=kinds.length<2?"none":"";
+  $("subs").innerHTML="";
+  kinds.forEach(k=>{const b=document.createElement("button");b.className="chip";b.textContent=K[k].name;b.setAttribute("aria-pressed",S.kind[S.tab]===k);b.onclick=()=>{S.kind[S.tab]=k;save();render()};$("subs").append(b)});
+  seg("clarity",[["clear","Clear"],["stained","Stained"],["muddy","Muddy"]],"clar");
+
+  $("live").setAttribute("aria-pressed",S.live);$("set").setAttribute("aria-pressed",!S.live);$("whenBox").hidden=S.live;
+  const date=nowDate(),month=date.getMonth(),k=S.kind[S.tab],p=K[k];
+  if(!S.live){$("d").value=`${date.getFullYear()}-${pad(month+1)}-${pad(date.getDate())}`;$("t").value=`${pad(date.getHours())}:${pad(date.getMinutes())}`}
+  const hasT=S.temp!==""&&!isNaN(+S.temp),wt=waterTemp(k,date),t=wt.t,sk=skyNow(date),sky=sk.sky;
+  seg("sky",[["sun","Bright"],["cloud","Clouds or chop"],["front","After a front"]],"sky",sky);
+  const fromFc=sk.src==="forecast",SKYW={sun:"Bright",cloud:"Clouds or chop",front:"After a front"},showSeg=!fromFc||skyOpen;
+  $("sky").hidden=!showSeg;$("skyLine").hidden=showSeg;$("skyLine").textContent=SKYW[sky];
+  $("skyHint").innerHTML=sk.src==="you"?(D.w?'Set by you. <button class="linkbtn" id="skyAuto">Use forecast</button>':"Set by you."):fromFc?(skyOpen?'<button class="linkbtn" id="skyAuto">Use forecast</button>':'From the forecast. <button class="linkbtn" id="skyEdit">Change</button>'):"No forecast yet. Tap what you see.";
+  if($("skyAuto"))$("skyAuto").onclick=()=>{S.sky=null;skyOpen=false;save();render()};
+  if($("skyEdit"))$("skyEdit").onclick=()=>{skyOpen=true;render()};
+  if(document.activeElement!==$("temp"))$("temp").value=hasT?S.temp:"";
+  $("temp").placeholder=t;
+  const showStep=hasT||tempOpen;
+  $("tempStep").hidden=!showStep;$("tempLine").hidden=showStep;$("tempLine").textContent=`${t}°F`;
+  $("tempHint").innerHTML=hasT?'Your reading. <button class="linkbtn" id="tempAuto">Use live data</button>':tempOpen?'<button class="linkbtn" id="tempAuto">Use live data</button>':`${wt.text} <button class="linkbtn" id="tempEdit">${wt.src==="gauge"?"Change":"Enter reading"}</button>`;
+  if($("tempAuto"))$("tempAuto").onclick=()=>{S.temp="";tempOpen=false;save();render()};
+  if($("tempEdit"))$("tempEdit").onclick=()=>{tempOpen=true;render();$("temp").focus()};
+  const stage=pickStage(k,t,month),noon=noonOf(date,S.lat,S.lng),per=periodAt(date,S.lat,S.lng,noon),d=depthFor(k,stage,per,sky,date,S.lat,S.lng);
+  const v=score(k,per,t,sky,S.clar,stage),sc=dayScores(k,date,S.lat,S.lng,t,sky,S.clar,stage),w=windows(sc);
+  $("stage").textContent=`${p.name}: ${stage.name}`;
+  $("depth").textContent=`${d[0]}–${d[1]} ft`;
+  /* setup */
+  const ranked=rankSetups(k,stage,d,t,per,sky,S.clar),top=ranked[0];
+  const pick=S.setup[k]&&KIT[k][S.setup[k]]?S.setup[k]:"";
+  const cur=pick?ranked.find(x=>x.id===pick):top,o=setupOf(k,cur.id);
+  $("setup").innerHTML=`<option value="">Best for right now: ${setupOf(k,top.id).n}</option>`+ranked.map(x=>`<option value="${x.id}"${x.id===pick?" selected":""}>${setupOf(k,x.id).n} (${fitWord(x.v)})</option>`).join("");
+  $("meter").style.width=cur.v+"%";
+  $("fit").innerHTML=`<b>${fitWord(cur.v)} fit.</b> `+(cur.why.length?cur.why.join(". ")+".":pick&&fitWord(cur.v)!==fitWord(top.v)?`${setupOf(k,top.id).n} rates higher right now.`:"Matches today's depth, temperature and light.");
+  const adjV=Math.max(.2,v-(cur.v<38?1.5:cur.v<58?.75:0));
+  const stageMatch=stage.lures.filter(l=>stageSetup(k,l[0],d)===cur.id);
+  const luresNow=pick?[...stageMatch,...o.lu.filter(l=>!stageMatch.some(m=>sameLure(m[0],l[0])))].slice(0,3):[...stageMatch,...stage.lures.filter(l=>!stageMatch.includes(l))];
+  $("lead").textContent=luresNow[0][0];
+  const rw=word(adjV);$("rate").textContent=`${rw} ${S.live?"now":"then"}`;$("rate").className="rate "+rw;
+  $("best").textContent=`Best: ${w.map(o=>fmt(o.a)+"–"+fmt(o.b)).join(" and ")}`;
+  $("strip").innerHTML=sc.map(o=>`<i style="background:${bg(o.v)}"></i>`).join("")+`<div class="mark" style="left:calc(${(date.getHours()*60+date.getMinutes())/14.4}% - 1px)"></div>`;
+  $("strip").setAttribute("aria-label",`Bite strength through the day. ${$("best").textContent}`);
+  /* sunrise and sunset */
+  const s0=new Date(date);s0.setHours(0,0,0,0);let rise,set;
+  for(let i=1;i<1440;i++){const x=new Date(+s0+i*6e4),a=sunAlt(x,S.lat,S.lng),b=sunAlt(new Date(+x-6e4),S.lat,S.lng);if(b<-.83&&a>=-.83)rise=x;if(b>=-.83&&a<-.83)set=x}
+  const wx=sk.src==="forecast"||(D.w&&hourIndex(D.w,date)>=0)?(i=>` Air ${Math.round(D.w.temperature_2m[i])}°F, clouds ${Math.round(D.w.cloud_cover[i])}%, wind ${Math.round(D.w.wind_speed_10m[i])} mph.`)(hourIndex(D.w,date)):"";
+  $("sun").textContent=`Sunrise ${rise?fmt(rise):"--"}, sunset ${set?fmt(set):"--"}.${wx}`;
+  /* column */
+  const scale=Math.max(20,Math.ceil(d[1]*1.35/10)*10),col=$("column"),step=scale<=30?5:scale<=80?10:scale<=150?25:50;let h="";
+  for(let f=step;f<scale;f+=step)h+=`<div class="tick" style="top:${f/scale*100}%">${f}</div>`;
+  h+=`<div class="band" style="top:${d[0]/scale*100}%;height:${(d[1]-d[0])/scale*100}%">Fish here</div>`;
+  col.innerHTML=h;
+  $("lures").innerHTML=luresNow.map(l=>`<li><div><b>${l[0]}</b>${l[1]}</div></li>`).join("");
+  const row=colorRow(p,S.clar,per,sky,d),cs=(o.c&&o.c[row])||p.colors[row];
+  $("prog").innerHTML=cs.map(c=>`<div class="c"><span style="background:${C[c][1]}"></span>${C[c][0]}</div>`).join("");
+  $("colorWhy").textContent=COLOR_WHY[row];
+  const showDrop=cur.id==="drop";$("dropBox").hidden=!showDrop;
+  if(showDrop){
+    const mph=dropSpeed(stage),target=Math.round((d[0]+d[1])/2);
+    $("weights").innerHTML="";
+    DROP_OZ.forEach(([oz])=>{const b=document.createElement("button");b.className="chip";b.textContent=OZ_LABEL[oz];const on=S.drop.oz.includes(oz);b.setAttribute("aria-pressed",on);b.onclick=()=>{S.drop.oz=on?S.drop.oz.filter(x=>x!==oz):[...S.drop.oz,oz].sort((a,b)=>a-b);save();render()};$("weights").append(b)});
+    if(document.activeElement!==$("sp"))$("sp").value=mph;
+    const rows=S.drop.oz.map(oz=>({oz,ft:dropLine(oz,mph,target)}));
+    const good=rows.filter(r=>r.ft>=40&&r.ft<=MAX_LINE),bestRow=good.length?good[good.length-1]===undefined?null:good.reduce((a,b)=>Math.abs(a.ft-85)<Math.abs(b.ft-85)?a:b):null;
+    $("dropRows").innerHTML=rows.length?rows.map(r=>`<div class="drop-row${r===bestRow?" best":""}"><b>${OZ_LABEL[r.oz]}</b><span>${r.ft>MAX_LINE?"Too light for this depth":r.ft<25?"Heavier than you need":r.ft+" ft of line out"}</span><span>${r===bestRow?"Use this":""}</span></div>`).join(""):'<p class="fine">Choose the weights you carry.</p>';
+    $("dropNote").textContent=`Aims for ${target} ft at ${mph} mph, measured on mono or copolymer with a keel, banana or inline weight. Treat it as a starting point. Slowing down or turning sends the weight deeper, speeding up lifts it, and a big dodger pulls it up a little. Tag bottom once at your speed to check it.`;
+  }
+  $("facts").innerHTML=`<dt>Speed</dt><dd>${cur.id==="drop"?dropSpeed(stage)+" mph":pick?o.sp:stage.speed}</dd><dt>Find</dt><dd>${p.target}</dd><dt>Right now</dt><dd>${stage.note}</dd>`;
+  $("change").innerHTML=["Change depth by 10 ft or to the next temperature band.","Change speed or retrieve.","Change lure type from the list above.","Change to the next color."].map(x=>`<li>${x}</li>`).join("");
+  $("place").textContent=status||`Getting conditions for ${S.place}.`;
+}
+const EV=[
+["Water temperature","Strong","","Sets season stage, activity and depth. This is the first thing the app reads. Temperature at depth beats surface temperature for trout and salmon."],
+["Depth and thermocline","Strong","","In summer, trout and kokanee hold in a narrow band. Find it with a probe or graph and you skip most of the guessing."],
+["Light and time of day","Strong for walleye and bass","","Walleye eyes are built for dim light, so they feed shallow at dawn and dusk. One 2,500-trip bass log found dusk nearly doubled the average catch rate. Large-lake trout and mackinaw depend on it less."],
+["Clouds and wind chop","Good","m","Lower light keeps walleye and bass active longer. The app treats it like a longer dawn."],
+["Spawn stage","Strong","","Predictable by temperature. Walleye often bite poorly during the peak spawn."],
+["Run timing and river temperature","Strong for upriver salmon","","Above about 70°F, the Okanogan stops salmon and stacks them in the Brewster Pool. Adult salmon are mostly not feeding, so it's reaction, not hunger."],
+["Lure color","Moderate","m","Real physics: red fades first with depth and stain. Evidence that one color beats another on a given day is thin, so color comes last in the change order."]];
+const SRC=[["Muskie Lunacy, PLOS ONE (Vinson and Angradi, 2014)","https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0098046"],["In-Fisherman: solunar forces on bass (Manns data)","https://www.in-fisherman.com/editorial/solunar-forces-on-bass-fishing/377272"],["In-Fisherman: barometric pressure and bass","https://www.in-fisherman.com/editorial/barometric-pressure-and-bass/153689"],["Minnesota DNR: walleye biology","https://dnr.state.mn.us/fish/walleye/biology.html"],["Jocassee Reservoir trout temperature study","https://informahealthcare.com/doi/full/10.1577/M03-019.1"],["Northwest Fishing Reports: thermocline","https://northwestfishingreports.com/Articles/Details/264"],["Idaho Fish and Game: kokanee tips","https://idfg.idaho.gov/article/fg-staff-gives-kokanee-fishing-tips-help-you-better-understand-and-catch-these-unique-fish"],["Northwest Fishing Reports: kokanee temperature","https://northwestfishingreports.com/Articles/Details/507"],["WDFW: Lake Chelan","https://wdfw.wa.gov/fishing/locations/lowland-lakes/lake-chelan"],["Pautzke: Brewster Pool","https://pautzke.com/chinook-sockeye-invading-upper-columbia-river/"],["Mack's Lure: sockeye tips","https://mackslure.com/blogs/mack-attack/five-tips-to-catch-more-sockeye-this-summer"],["MSU Extension: salmon feeding in rivers","https://www.canr.msu.edu/news/amazing_revelation_some_pacific_salmon_do_feed_during_spawning_run"],["Bass Resource: largemouth seasons","https://bassresource.com/fish_biology/lgseason.html"],["Bassmaster: spawn-time smallmouth","https://www.bassmaster.com/tips/spawn-time-smallmouth"],["GearJunkie: what bass see","https://gearjunkie.com/outdoor/hunt-fish/what-bass-actually-see"],["Bass Pro: fishing and the color game","https://1source.basspro.com/news-tips/fishing-tackle/5192/fishing-and-color-game"],["Ohio Game Fishing: inline weight depths and speed","https://www.ohiogamefishing.com/threads/dive-charts-for-inline-weights.122264/"],["Ohio Game Fishing: 1, 2 and 3 oz at 80 back","https://www.ohiogamefishing.com/threads/spinner-depth-chart-for-2mph.234845/"]];
+function renderMatters(){
+  $("matters").innerHTML=`<div class="answer"><h1 style="font-size:clamp(44px,11vw,76px)">Why this plan</h1><p class="lead">What the app uses, strongest first.</p></div>
+  <table>${EV.map(e=>`<tr><th>${e[0]}</th><td><span class="tag ${e[2]}">${e[1]}</span><br>${e[3]}</td></tr>`).join("")}</table>
+  <section style="margin-top:24px"><p class="rule">Moon phase and barometric pressure are left out. The evidence is too weak to change a plan.</p></section><section><p class="rule">Water temperature uses your reading first, then a live USGS gauge, then an estimate from air temperature. Lake estimates can be off by several degrees, and the Columbia main stem has no live feed here.</p></section><section><p class="rule">Depths, speeds and lure orders are starting points drawn from biologists and regional guides. Your graph and your last fish outrank this app.</p></section>
+  <section><h2>Sources</h2><ul class="sources">${SRC.map(s=>`<li><a href="${s[1]}" rel="noopener">${s[0]}</a></li>`).join("")}</ul><p class="fine">Weather by <a href="https://open-meteo.com" rel="noopener">Open-Meteo</a> (CC BY 4.0). Water temperature from <a href="https://waterdata.usgs.gov" rel="noopener">USGS</a>.</p></section>`;
+}
+function setSpeed(v){if(isNaN(v))return;S.drop.speed=Math.round(Math.max(.8,Math.min(3,v))*10)/10;save();render()}
+$("sp").onchange=e=>setSpeed(+e.target.value);
+$("spMinus").onclick=()=>setSpeed(+$("sp").value-.1);$("spPlus").onclick=()=>setSpeed(+$("sp").value+.1);
+$("setup").onchange=e=>{S.setup[S.kind[S.tab]]=e.target.value;save();render()};
+$("live").onclick=()=>{S.live=true;save();render()};
+$("set").onclick=()=>{S.live=false;S.when=+nowDate();save();render()};
+function setWhen(){if($("d").value&&$("t").value){S.when=+new Date(`${$("d").value}T${$("t").value}`);save();render()}}
+$("d").onchange=setWhen;$("t").onchange=setWhen;
+$("temp").oninput=e=>{S.temp=e.target.value;save();render()};
+function bump(n){const cur=waterTemp(S.kind[S.tab],nowDate()).t;S.temp=String(Math.max(32,Math.min(90,cur+n)));save();render()}
+$("minus").onclick=()=>bump(-1);$("plus").onclick=()=>bump(1);
+$("gps").onclick=()=>{status="Getting your location.";render();refresh(true)};
+$("why").onclick=()=>{S.tab="matters";save();render();scrollTo(0,0)};
+if(S.tab==="matters")S.tab="trout";
+render();
+refresh(false);
+setInterval(()=>{if(S.live&&document.activeElement!==$("temp"))render()},60000);
+setInterval(()=>refresh(false),18e5);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){render();refresh(false)}});
+</script>
+</body>
+</html>
