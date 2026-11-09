@@ -103,7 +103,7 @@ a{color:#0d5f75}
 <div class="wrap">
   <div id="fishing">
     <div class="subs" id="subs"></div>
-    <div class="locbar"><button class="locbtn" id="gps">Update location</button><p class="fine" id="place" role="status"></p></div>
+    <div class="locbar"><button class="locbtn" id="gps">Update location and forecast</button><p class="fine" id="place" role="status"></p></div>
     <div class="waterbox"><label for="water">Where you're fishing</label><select id="water"></select><div class="maplinks" id="mapLinks"></div>
       <div id="oddsBox"><div class="oddsT" id="oddsT" style="margin-top:10px"></div><div class="odds" id="odds"></div></div>
       <div class="flag" id="flag" hidden></div><p class="fine" id="stockLine" hidden></p></div>
@@ -111,7 +111,7 @@ a{color:#0d5f75}
       <p class="stage" id="stage"></p>
       <h1 id="depth"></h1>
       <p class="lead" id="lead"></p>
-      <span class="rate" id="rate"></span><span class="best" id="best"></span>
+      <span class="rate" id="rate"></span><span class="best" id="best"></span><p class="fine" id="lightLine" hidden></p>
     </div>
     <div class="controls setupbar"><div class="ctl setup"><label for="setup">Your setup</label><select id="setup"></select>
         <div class="meter" aria-hidden="true"><i id="meter"></i></div><p class="fit" id="fit"></p></div></div>
@@ -590,6 +590,20 @@ function oddsFor(w,date){
 const GAUGES=[{id:"USGS-12447200",name:"Okanogan River at Malott",lat:48.2813,lng:-119.7045,km:15},{id:"USGS-12462500",name:"Wenatchee River at Monitor",lat:47.4993,lng:-120.4245,km:10},{id:"USGS-12462600",name:"Columbia below Rock Island Dam",lat:47.333,lng:-120.08,km:10}];
 function km(a,b,c,d){const x=(d-b)*RAD*Math.cos((a+c)/2*RAD),y=(c-a)*RAD;return Math.hypot(x,y)*6371}
 function hourIndex(w,date){const p=n=>String(n).padStart(2,"0");return w.time.indexOf(`${date.getFullYear()}-${p(date.getMonth()+1)}-${p(date.getDate())}T${p(date.getHours())}:00`)}
+function lightEvents(w,date,lat,lng){
+  const H=[];for(let h=0;h<24;h++){const x=new Date(date.getFullYear(),date.getMonth(),date.getDate(),h),i=hourIndex(w,x);if(i>=0&&sunAlt(x,lat,lng)>=5)H.push({x,c:w.cloud_cover[i],w:w.wind_speed_10m[i],r:w.precipitation_probability?w.precipitation_probability[i]:null})}
+  if(H.length<3)return null;
+  const out=[],avg=H.reduce((a,o)=>a+o.c,0)/H.length,bad=v=>v==null;
+  for(let j=0;j+2<H.length;){const a=H[j],b=H[j+2],d=b.c-a.c;if(bad(a.c)||bad(b.c)){j++;continue}
+    if(d>=35&&b.c>=60){out.push({kind:"dim",a:a.x,b:b.x,text:`Clouds move in, ${Math.round(a.c)}% to ${Math.round(b.c)}%`});j+=2}
+    else if(d<=-35&&a.c>=60){out.push({kind:"clear",a:a.x,b:b.x,text:"Sky clears, so low light ends"});j+=2}
+    else if(!bad(a.r)&&!bad(b.r)&&a.r<30&&b.r>=60){out.push({kind:"rain",a:a.x,b:b.x,text:`Rain chance climbs to ${Math.round(b.r)}%, so the light dims`});j+=2}
+    else if(!bad(a.w)&&!bad(b.w)&&b.w>20&&a.w<=20){out.push({kind:"blow",a:a.x,b:b.x,text:`Wind builds past 20 mph, so big water gets rough`});j+=2}
+    else if(!bad(a.w)&&!bad(b.w)&&a.w>=12&&b.w<7){out.push({kind:"calm",a:a.x,b:b.x,text:"Wind drops and the water goes slick, so expect fish to get warier"});j+=2}
+    else if(!bad(a.w)&&!bad(b.w)&&a.w<6&&b.w>=8&&b.w<=20){out.push({kind:"wind",a:a.x,b:b.x,text:`Wind comes up to ${Math.round(b.w)} mph and chop cuts the light`});j+=2}
+    else j++}
+  return {events:out.slice(0,3),gray:avg>=80&&!out.some(o=>o.kind==="clear")};
+}
 function skyFrom(w,i){
   const cloud=w.cloud_cover[i],wind=w.wind_speed_10m[i],j=i-24;
   if(j>=0&&cloud<50&&w.temperature_2m[j]-w.temperature_2m[i]>=10&&w.pressure_msl[i]-w.pressure_msl[j]>=4)return "front";
@@ -629,7 +643,7 @@ async function getJSON(url){
 }
 function position(fresh){return new Promise((ok,no)=>{if(!navigator.geolocation)return no();navigator.geolocation.getCurrentPosition(ok,no,fresh?{timeout:20000,maximumAge:0,enableHighAccuracy:true}:{timeout:12000,maximumAge:3e5})})}
 async function loadWeather(){
-  const url=`https://api.open-meteo.com/v1/forecast?latitude=${S.lat.toFixed(3)}&longitude=${S.lng.toFixed(3)}&hourly=temperature_2m,cloud_cover,wind_speed_10m,pressure_msl&past_days=14&forecast_days=7&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`;
+  const url=`https://api.open-meteo.com/v1/forecast?latitude=${S.lat.toFixed(3)}&longitude=${S.lng.toFixed(3)}&hourly=temperature_2m,cloud_cover,wind_speed_10m,pressure_msl,precipitation_probability&past_days=14&forecast_days=7&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`;
   const j=await getJSON(url);D.w=j.hourly;D.at=Date.now();D.lat=S.lat;D.lng=S.lng;
 }
 async function loadGauge(g){
@@ -656,14 +670,14 @@ async function loadStock(){
   D.stock=out;D.stockAt=Date.now();
 }
 let busy=false,again=false,skyOpen=false,tempOpen=false;
-function lockBtn(on){$("gps").disabled=on;$("gps").textContent=on?"Updating location":"Update location"}
+function lockBtn(on){$("gps").disabled=on;$("gps").textContent=on?"Updating":"Update location and forecast"}
 async function refresh(force){
   if(busy){if(force)again=true;return}
   busy=true;let loc="";if(force)lockBtn(true);
   if(force)S.water="";
   try{const p=await position(force);S.gps=[p.coords.latitude,p.coords.longitude];if(!S.water){S.lat=S.gps[0];S.lng=S.gps[1];S.place="your location"}save()}
   catch(e){if(!S.water)loc=`Location is off, so conditions are for ${S.place}. Allow location in your browser settings to use your spot. `}
-  const moved=D.lat==null||km(S.lat,S.lng,D.lat,D.lng)>2,stale=Date.now()-D.at>18e5;
+  const moved=D.lat==null||km(S.lat,S.lng,D.lat,D.lng)>2,stale=Date.now()-D.at>108e5;
   const jobs=[];
   if(force||moved||stale||!D.w)jobs.push(loadWeather().then(()=>1,()=>0));
   const need=new Set([GAUGES[0],GAUGES[2]]),cw=currentWater();if(cw&&cw.g!=null)need.add(GAUGES[cw.g]);
@@ -820,6 +834,7 @@ function render(){
   $("lead").textContent=luresNow[0][0];
   const rw=word(adjV);$("rate").textContent=`${rw} ${S.live?"now":"then"}`;$("rate").className="rate "+rw;
   $("best").textContent=`Best: ${w.map(o=>fmt(o.a)+"–"+fmt(o.b)).join(" and ")}`;
+  {const L=D.w?lightEvents(D.w,date,S.lat,S.lng):null,bits=L?L.events.map(e=>`${fmt(e.a)}–${fmt(e.b)}: ${e.text}.`):[];if(L&&L.gray)bits.unshift("Gray all day, so low light may stretch the bite well past dawn and dusk.");$("lightLine").hidden=!bits.length;$("lightLine").textContent=bits.length?`Light changes in the forecast: ${bits.join(" ")} Cloud timing can be off by an hour or more.`:""}
   $("strip").innerHTML=sc.map(o=>`<i style="background:${bg(o.v)}"></i>`).join("")+`<div class="mark" style="left:calc(${(date.getHours()*60+date.getMinutes())/14.4}% - 1px)"></div>`;
   $("strip").setAttribute("aria-label",`Bite strength through the day. ${$("best").textContent}`);
   /* sunrise and sunset */
@@ -892,7 +907,6 @@ if(S.tab==="matters")S.tab="go";
 render();
 refresh(false);
 setInterval(()=>{if(S.live&&document.activeElement!==$("temp"))render()},60000);
-setInterval(()=>refresh(false),18e5);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden){render();refresh(false)}});
 </script>
 </body>
