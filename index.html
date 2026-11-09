@@ -92,7 +92,7 @@ th{font-weight:700;width:30%}
 .tag.m{background:var(--sun);color:var(--ink)}.tag.w{background:#fff;color:var(--ink);border:1px solid var(--ink)}
 .sources{font-size:15px;padding-left:20px}
 a{color:#0d5f75}
-.linkbtn{background:none;border:0;padding:0;color:#0d5f75;text-decoration:underline;cursor:pointer;font-size:14px}
+.golist li{background:var(--panel);border:2px solid var(--line);border-radius:9px;padding:11px 12px;margin:0 0 8px}.golist button.goname{display:block;width:100%;background:none;border:0;border-radius:0;padding:0;margin:0;font:700 21px/1.15 var(--sign);text-align:left;color:#0d5f75;text-decoration:underline;cursor:pointer}.golist button.gorest{background:none;border:0;border-radius:0;padding:0;margin:2px 0 0}.golist .maplinks[hidden]{display:none}.golist small{display:block;font-size:13px;color:var(--soft);margin-top:3px}details.more{border-top:2px solid var(--line);margin-top:10px}details.more summary{cursor:pointer;padding:12px 0;font-weight:600}.setupbar{grid-template-columns:minmax(0,1fr)!important}details.closed{margin-top:10px;font-size:15px}details.closed summary{cursor:pointer;font-weight:600}.maplinks{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.maplink{display:inline-block;padding:8px 12px;border:1px solid #0d5f75;border-radius:999px;color:#0d5f75;font-size:14px;text-decoration:none}.linkbtn{background:none;border:0;padding:0;color:#0d5f75;text-decoration:underline;cursor:pointer;font-size:14px}
 @media(max-width:380px){.tabs button{font-size:16px}.grid{grid-template-columns:90px minmax(0,1fr);gap:12px}.band{left:34px;right:5px;font-size:16px}}
 @media(min-width:760px){.controls{grid-template-columns:repeat(4,minmax(0,1fr))}.grid{grid-template-columns:190px minmax(0,1fr);gap:34px}.column{height:480px}}
 @media(prefers-reduced-motion:reduce){.band{transition:none}}
@@ -104,10 +104,27 @@ a{color:#0d5f75}
   <div id="fishing">
     <div class="subs" id="subs"></div>
     <div class="locbar"><button class="locbtn" id="gps">Update location</button><p class="fine" id="place" role="status"></p></div>
-    <div class="waterbox"><label for="water">Where you're fishing</label><select id="water"></select>
+    <div class="waterbox"><label for="water">Where you're fishing</label><select id="water"></select><div class="maplinks" id="mapLinks"></div>
       <div id="oddsBox"><div class="oddsT" id="oddsT" style="margin-top:10px"></div><div class="odds" id="odds"></div></div>
       <div class="flag" id="flag" hidden></div><p class="fine" id="stockLine" hidden></p></div>
-    <div class="controls">
+    <div class="answer">
+      <p class="stage" id="stage"></p>
+      <h1 id="depth"></h1>
+      <p class="lead" id="lead"></p>
+      <span class="rate" id="rate"></span><span class="best" id="best"></span>
+    </div>
+    <div class="controls setupbar"><div class="ctl setup"><label for="setup">Your setup</label><select id="setup"></select>
+        <div class="meter" aria-hidden="true"><i id="meter"></i></div><p class="fit" id="fit"></p></div></div>
+    <div class="day"><div class="strip" id="strip" role="img"></div><div class="hours"><span>12a</span><span>6a</span><span>Noon</span><span>6p</span><span>12a</span></div>
+      <p class="fine" id="sun"></p></div>
+    <div class="grid">
+      <div class="column" id="column" aria-hidden="true"></div>
+      <div>
+        <section><h2 id="lureH">Lures, in order</h2><ul class="lures" id="lures"></ul></section>
+        <section><h2>Color progression</h2><div class="prog" id="prog"></div><p class="fine" id="colorWhy"></p></section>
+      </div>
+    </div>
+    <details class="more"><summary>Time, water temperature, sky and color</summary><div class="controls">
       <div class="ctl"><div class="lab">When</div>
         <div class="seg"><button id="live">Now</button><button id="set">Pick a time</button></div>
         <div class="when" id="whenBox" hidden><input type="date" id="d" aria-label="Date"><input type="time" id="t" aria-label="Time"></div>
@@ -118,24 +135,8 @@ a{color:#0d5f75}
       </div>
       <div class="ctl"><div class="lab">Water color</div><div class="seg" id="clarity"></div></div>
       <div class="ctl"><div class="lab">Sky</div><div class="seg" id="sky"></div><p class="skyline" id="skyLine"></p><p class="hint" id="skyHint"></p></div>
-      <div class="ctl setup"><label for="setup">Your setup</label><select id="setup"></select>
-        <div class="meter" aria-hidden="true"><i id="meter"></i></div><p class="fit" id="fit"></p></div>
     </div>
-    <div class="answer">
-      <p class="stage" id="stage"></p>
-      <h1 id="depth"></h1>
-      <p class="lead" id="lead"></p>
-      <span class="rate" id="rate"></span><span class="best" id="best"></span>
-    </div>
-    <div class="day"><div class="strip" id="strip" role="img"></div><div class="hours"><span>12a</span><span>6a</span><span>Noon</span><span>6p</span><span>12a</span></div>
-      <p class="fine" id="sun"></p></div>
-    <div class="grid">
-      <div class="column" id="column" aria-hidden="true"></div>
-      <div>
-        <section><h2 id="lureH">Lures, in order</h2><ul class="lures" id="lures"></ul></section>
-        <section><h2>Color progression</h2><div class="prog" id="prog"></div><p class="fine" id="colorWhy"></p></section>
-      </div>
-    </div>
+    </details>
     <div class="rest">
         <section id="tipsBox"><h2 id="tipsH"></h2><ul class="tips" id="tips"></ul></section>
         <section><h2>Log this trip</h2><div class="logbtns"><button id="logYes">Caught fish</button><button id="logNo">Skunked</button></div><p class="fine" id="logSum" role="status"></p><ul class="tips" id="logList"></ul><p class="fine"><button class="linkbtn" id="logCsv">Download my log</button></p></section>
@@ -152,7 +153,7 @@ a{color:#0d5f75}
   <div id="go" hidden>
     <div class="answer"><h1 style="font-size:clamp(44px,12vw,76px)">Where to go</h1><p class="lead" id="goLead"></p></div>
     <div class="controls" style="border-bottom:0"><div class="ctl"><label for="goSp">Fish for</label><select id="goSp"></select></div><div class="ctl"><label for="goMax">Drive</label><select id="goMax"><option value="30">Within 30 min</option><option value="60">Within 1 hour</option><option value="90">Within 90 min</option><option value="999">Any distance</option></select></div></div>
-    <ol class="golist" id="goList"></ol><p class="fine" id="goNote"></p></div>
+    <ol class="golist" id="goList"></ol><details class="closed" id="goClosed" hidden><summary id="goClosedS"></summary><p class="fine" id="goClosedL"></p></details><p class="fine" id="goNote"></p><p class="rule" id="goRules"></p></div>
   <div id="matters" hidden></div>
 </div>
 
@@ -348,6 +349,7 @@ const sameLure=(a,b)=>/popper|frog/i.test(a)&&/popper|frog/i.test(b)&&a.split(" 
 const fitWord=v=>v>=75?"Excellent":v>=58?"Good":v>=38?"Workable":"Poor";
 
 /* rough surface estimate for north-central Washington */
+const SHALLOW=["roses","dry","quincy","burke","stan","hammond","putters","bigbow"];
 const EST=[38,38,41,46,52,60,68,70,64,55,47,41];
 const PERIODS=["night","dawn","morning","midday","afternoon","dusk"];
 
@@ -481,6 +483,8 @@ const WATERS=[
 {id:"woodhouse",n:"Woodhouse Ponds",p:[[46.946425,-120.518545]],f:{rainbow:2,large:1,perch:1},s:"Y",r:.3,note:"Walk-in only."},
 {id:"kiwanis",n:"Kiwanis Pond (Cle Elum)",p:[[47.186806,-120.919742]],f:{rainbow:3},s:"Y",r:.3,restricted:1,note:"Only juveniles under 15, seniors 70 and up, and anglers with a designated harvester companion card may fish here."},
 {id:"naneum",n:"Naneum Pond (Ellensburg)",p:[[47.004286,-120.463918]],f:{rainbow:3},s:"Y",r:.3,restricted:1,note:"Only juveniles under 15, seniors 70 and up, and anglers with a designated harvester companion card may fish here."},
+{id:"hh",n:"H&H Reservoir (Pascal Pond)",p:[[47.332396,-120.39832]],f:{brown:2},s:"Y",r:.4},
+{id:"hideaway",n:"Hideaway Lake (Rock Island)",p:[[47.38436,-120.147184]],f:{large:2,bluegill:2},s:"Y",r:.3,note:"Not stocked with trout."},
 {id:"entiatup",n:"Entiat River, above the falls",p:[[47.92,-120.55]],f:{cutt:2,rainbow:1},s:"S",note:"Selective gear only."}
 ];
 /* ---------- local notes: paraphrased from guide columns, WDFW and angler reports ---------- */
@@ -608,7 +612,7 @@ function waterTemp(k,date){
   if(S.temp!==""&&!isNaN(+S.temp))return {t:+S.temp,src:"you"};
   const g=gaugeFor(k),r=g&&D.gauges[g.id],now=Date.now();
   if(r&&Math.abs(date-now)<864e5&&now-r.at<36*36e5)return {t:r.f,src:"gauge",text:`Live: ${g.name}, ${ago(now-r.at)}.`};
-  if(D.w){const i=hourIndex(D.w,date);if(i>=0){let e=lakeEstimate(D.w,i);if(e!=null){const w=currentWater(),m=date.getMonth();if(w&&w.deep&&m>=4&&m<=8)e-=6;return {t:e,src:"est",text:"Estimated from 2 weeks of air temperature."}}}}
+  if(D.w){const i=hourIndex(D.w,date);if(i>=0){let e=lakeEstimate(D.w,i);if(e!=null){const w=currentWater(),m=date.getMonth();let tag="";if(w&&w.deep&&m>=4&&m<=8){e-=6;tag=" Lowered for a deep lake."}else if(w&&SHALLOW.includes(w.id)){if(m>=4&&m<=7){e+=3;tag=" Raised for a shallow lake."}else if(m>=10||m<=1){e-=2;tag=" Lowered for a shallow lake."}}return {t:e,src:"est",text:"Estimate from 2 weeks of air temperature, not a reading."+tag}}}}
   return {t:EST[date.getMonth()],src:"month",text:"Rough guess for this month."};
 }
 function skyNow(date){
@@ -700,12 +704,27 @@ function renderLog(){
 }
 const TIP_SP={mack:/mackinaw|lake trout/i,koke:/kokanee/i,river:/chinook|kings?\b|sockeye|salmon|coho/i,walleye:/walleye/i,small:/smallmouth|\bbass\b/i,large:/largemouth|\bbass\b/i,rainbow:/rainbow|\btrout\b|\bplants?\b|\bstocked\b/i};
 function tipFits(t,k){const c=t.replace(/lake trout/ig,"mackinaw");if(/^mackinaw/i.test(c))return k==="mack";const hit=Object.keys(TIP_SP).filter(s=>TIP_SP[s].test(c));return !hit.length||hit.includes(k)}
+const SPOTS={chelanL:[["Mill Bay","Mill Bay boat launch Lake Chelan","mack"],["Wapato Point","Wapato Point Lake Chelan","mack"],["Manson Bay","Manson Bay Lake Chelan","koke"],["Greens Landing","Greens Landing Lake Chelan","koke"]],banks:[["Barker Canyon","Barker Canyon Banks Lake","walleye small"],["Devils Punch Bowl","Devils Punch Bowl Banks Lake","walleye small"],["Steamboat Rock","Steamboat Rock State Park","walleye small"]],clapp:[["Summer Falls","Summer Falls State Park","walleye"]],potholes:[["Lind Coulee","Lind Coulee Potholes Reservoir","walleye large"],["Frenchman Wasteway","Frenchman Hills Wasteway Potholes","walleye"],["The dunes","Potholes Sand Dunes","walleye large"],["MarDon dock","MarDon Resort","perch"]],moses:[["Blue Heron Park","Blue Heron Park Moses Lake","perch"]],rufus:[["Chief Joseph Dam","Chief Joseph Dam","rainbow"],["Seatons Grove launch","Seatons Grove boat launch","rainbow"]],roosevelt:[["Keller Ferry","Keller Ferry","rainbow"],["Hunters","Hunters Campground Lake Roosevelt","koke"],["Fort Spokane","Fort Spokane","walleye"]],entiatlk:[["Chelan Falls","Chelan Falls Park","river"],["Entiat River mouth","Entiat Park","river"]],rockisland:[["Rocky Reach Dam","Rocky Reach Dam","river"]],brewster:[["Wells Dam","Wells Dam","river"]],alta:[["State park launch","Alta Lake State Park","rainbow koke"]],fish:[["Cove Resort","Cove Resort Fish Lake","perch rainbow koke"]]};
+const LAUNCHQ={rockisland:"Wenatchee boat launch Columbia River",entiatlk:"Daroga State Park boat launch",brewster:"Brewster boat launch",wanapum:"Vantage boat launch"};
+function appleMap(q,w){return `https://maps.apple.com/?q=${encodeURIComponent(q)}&sll=${w.p[0][0]},${w.p[0][1]}&z=12`}
+function mapLinks(w,sp,top){
+  const name=w.n.replace(/\s*\(.*?\)/g,"").split(/\s*[\/,]\s*/)[0].replace(/^Columbia:\s*/,"");
+  const river=["wenriver","entiatlow","entiatup"].includes(w.id),small=river||(w.r&&w.r<=.8);
+  const L=[[small?"Access":"Boat launch",appleMap(LAUNCHQ[w.id]||`${name} ${small?"fishing access":"boat launch"} Washington`,w)],["Lake pin",`https://maps.apple.com/?ll=${w.p[0][0]},${w.p[0][1]}&q=${encodeURIComponent(name)}&z=14`]];
+  (SPOTS[w.id]||[]).filter(x=>{const t=x[2].split(" ");return sp?t.includes(sp):(!t.includes("mack")||top==="mack")}).forEach(x=>L.push([x[0],appleMap(x[1],w)]));
+  return L.map(x=>`<a class="maplink" href="${x[1]}" target="_blank" rel="noopener">${x[0]}</a>`).join("");
+}
 function stockFor(id){const r=D.stock&&D.stock[id];if(r)return r;const s=STOCK_SEED[id];return s?{date:s[0],sp:s[1],n:s[2],seed:1}:null}
 function daysSince(iso,now){return Math.floor((now-new Date(iso+"T12:00:00"))/864e5)}
+const DRIVE={chelanL:48,chelanU:75,putters:18,bigbow:20,hammond:18,pit:18,wapato:55,roses:55,dry:55,antilon:62,fish:45,wenlake:50,clear:30,beehive:40,alta:70,jameson:70,grimes:75,blue:80,dryfalls:80,burke:45,quincy:45,evergreen:45,clapp:60,banks:75,moses:65,potholes:85,rufus:85,roosevelt:120,kachess:85,keechelus:90,cleelum:65,fiorito:70,mattoon:70,wanapum:40,rockisland:5,entiatlk:15,brewster:80,wenriver:15,entiatlow:30,entiatup:65,blacklk:30,lilly:30,uwheeler:40,hh:40,park:75,vic:75,deep:80,alkali:70,lenore:70,lenice:80,dusty:50,ancient:50,stan:50,cliff:50,crystal:50,cup:50,martha:45,caliche:50,warden:80,longg:90,cooper:85,lavender:70,easton:75,mccabe:70,woodhouse:70,kiwanis:60,naneum:65,hideaway:20};
+const nearWen=(lat,lng)=>km(lat,lng,47.42,-120.31)<=25;
+function driveMin(w,lat,lng){return nearWen(lat,lng)&&DRIVE[w.id]!=null?DRIVE[w.id]:Math.round(kmTo(w,lat,lng)*1.2/80*60)}
+function logLine(id){const a=LOG.filter(x=>x.wid===id);if(!a.length)return "";const n=a.filter(x=>x.hit).length;return `<small>Your log: caught fish on ${n} of ${a.length} trip${a.length>1?"s":""}.</small>`}
+const RULES_CHECKED="November 2026",RULES_END=new Date(2027,5,30);
 function rankWaters(date,sp,maxMin){
   const gl=S.gps||[S.lat,S.lng],m=date.getMonth(),wind=D.w&&hourIndex(D.w,date)>=0?D.w.wind_speed_10m[hourIndex(D.w,date)]:null;
   return WATERS.filter(w=>!w.restricted).map(w=>{
-    const km0=kmTo(w,gl[0],gl[1]),min=Math.round(km0*1.2/80*60);
+    const min=driveMin(w,gl[0],gl[1]);
     let ods=oddsFor(w,date);if(sp)ods=ods.filter(o=>o.sp===sp);
     if(!ods.length||min>maxMin)return null;
     const top=ods[0];let score=top.v/15*60;const why=[`${SP[top.sp]}${ods[1]?", "+SP[ods[1].sp]:""}`];
@@ -725,9 +744,11 @@ function renderGo(){
   const list=rankWaters(date,S.goSp,S.goMax);
   $("goLead").textContent=list.length?`Best open waters for ${date.toLocaleDateString([],{weekday:"long",month:"long",day:"numeric"})}`:"Nothing open matches that. Try a longer drive or a different fish.";
   $("goList").innerHTML="";
-  list.forEach(x=>{const li=document.createElement("li"),b=document.createElement("button");b.innerHTML=`<b>${x.w.n}</b><span><em>${x.why[0]}</em>${x.why[1]?", "+x.why.slice(1).join(", "):""}. About ${x.min} min away.</span>`;b.onclick=()=>{S.water=x.w.id;S.lat=x.w.p[0][0];S.lng=x.w.p[0][1];S.place=x.w.n;const t=SP_TAB[x.top]||["trout","rainbow"];S.tab=t[0];S.kind[t[0]]=t[1];save();render();scrollTo(0,0);refresh(false)};li.append(b);$("goList").append(li)});
-  const gl=S.gps||[S.lat,S.lng],shut=WATERS.filter(w=>!w.restricted&&Math.round(kmTo(w,gl[0],gl[1])*1.2/80*60)<=S.goMax&&(!S.goSp||w.f[S.goSp])&&!list.some(x=>x.w===w)).map(w=>w.n);
-  $("goNote").textContent=`${shut.length?"Closed today in this range: "+shut.join(", ")+". ":""}${D.stockAt?"Stocking updated "+fmt(new Date(D.stockAt))+". ":"Using saved stocking records. "}Rankings blend season, how good each water is for that fish, recent plants, wind and drive time. Drive times are rough. Check closures before you leave.`;
+  list.forEach(x=>{const li=document.createElement("li"),b=document.createElement("button");b.className="gorest";const nm=document.createElement("button"),mp=document.createElement("div");nm.className="goname";nm.textContent=x.w.n;nm.setAttribute("aria-expanded","false");mp.className="maplinks";mp.hidden=true;mp.innerHTML=mapLinks(x.w,S.goSp,x.top);nm.onclick=()=>{mp.hidden=!mp.hidden;nm.setAttribute("aria-expanded",!mp.hidden)};b.innerHTML=`<span><em>${x.why[0]}</em>${x.why[1]?", "+x.why.slice(1).join(", "):""}. About ${x.min} min away.</span>${logLine(x.w.id)}`;b.onclick=()=>{S.water=x.w.id;S.lat=x.w.p[0][0];S.lng=x.w.p[0][1];S.place=x.w.n;const t=SP_TAB[x.top]||["trout","rainbow"];S.tab=t[0];S.kind[t[0]]=t[1];save();render();scrollTo(0,0);refresh(false)};li.append(b);li.prepend(nm,mp);$("goList").append(li)});
+  const gl=S.gps||[S.lat,S.lng],shut=WATERS.filter(w=>!w.restricted&&driveMin(w,gl[0],gl[1])<=S.goMax&&(!S.goSp||w.f[S.goSp])&&!list.some(x=>x.w===w)).map(w=>w.n);
+  $("goClosed").hidden=!shut.length;$("goClosedS").textContent=`${shut.length} closed today in this range`;$("goClosedL").textContent=shut.join(", ")+".";
+  const stale=date>RULES_END;$("goRules").innerHTML=`${stale?"These seasons come from the 2026-27 rules and may be out of date. ":`Seasons last checked ${RULES_CHECKED}. `}<a href="https://wdfw.wa.gov/fishing/regulations/emergency-rules" rel="noopener">Check WDFW emergency rules</a>, especially for salmon.`;
+  $("goNote").textContent=`${D.stockAt?"Stocking updated "+fmt(new Date(D.stockAt))+". ":"Using saved stocking records. "}Rankings blend season, how good each water is for that fish, recent plants, wind and drive time. ${nearWen(gl[0],gl[1])?"Drive times are estimates from Wenatchee.":"Drive times are rough, from your location."}`;
 }
 function render(){
   const tabs=["go",...Object.keys(P)];
@@ -748,7 +769,7 @@ function render(){
   const cw=currentWater(),gl=S.gps||[S.lat,S.lng],sorted=WATERS.map(w=>({w,d:kmTo(w,gl[0],gl[1])})).sort((a,b)=>a.d-b.d);
   const near=nearestWater(gl[0],gl[1]);
   if(document.activeElement!==$("water"))$("water").innerHTML=`<option value="">${near?"Looks like "+near.n:"No listed water nearby"}</option>`+sorted.map(x=>`<option value="${x.w.id}"${x.w.id===S.water?" selected":""}>${x.w.n} (${Math.round(x.d*.6214)} mi)</option>`).join("");
-  $("oddsBox").hidden=!cw;
+  $("oddsBox").hidden=!cw;$("mapLinks").hidden=!cw;if(cw)$("mapLinks").innerHTML=mapLinks(cw,k);
   if(cw){
     const od=oddsFor(cw,date);$("oddsT").textContent=od.length?`Best odds in ${date.toLocaleDateString([],{month:"long"})}`:`Nothing open here in ${date.toLocaleDateString([],{month:"long"})}`;
     $("odds").innerHTML="";
