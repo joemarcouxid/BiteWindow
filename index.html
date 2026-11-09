@@ -20,7 +20,7 @@ button,input{font:inherit;color:inherit}
 :focus-visible{outline:3px solid var(--buoy);outline-offset:2px}
 .wrap{max-width:980px;margin:0 auto;padding:0 14px 48px}
 .top{background:var(--ink);color:#fff;padding:env(safe-area-inset-top) 0 0;position:sticky;top:0;z-index:5}
-.tabs{max-width:980px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.tabs{max-width:980px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
 .tabs button{background:none;border:0;border-bottom:5px solid transparent;color:#cfe3e2;padding:14px 2px 10px;font:600 18px/1 var(--sign);cursor:pointer}
 .tabs button[aria-selected=true]{color:#fff;border-bottom-color:var(--buoy)}
 .subs{display:flex;gap:8px;padding:14px 0 2px;flex-wrap:wrap}
@@ -76,6 +76,9 @@ section+section{margin-top:24px}
 .waterbox{padding:12px 0 0}.waterbox label,.oddsT{display:block;font-size:15px;color:var(--soft);margin-bottom:4px}
 .odds{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 0}.odds .chip{min-height:38px;padding:4px 12px;font-size:15px;background:var(--panel)}.odds span.chip{cursor:default;border-color:var(--line)}
 .flag{margin:10px 0 0;padding:8px 10px;border-radius:7px;font-size:15px;line-height:1.3;background:#dcecd9}.flag.bad{background:var(--buoy);color:#fff}.flag.bad a{color:#fff}.flag.warn{background:#f7dd95}
+.tips{list-style:none;margin:0;padding:0}.tips li{padding:9px 0;border-top:1px solid var(--line)}.tips small{display:block;font-size:13px;color:var(--soft);margin-top:2px}
+.logbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}.logbtns button{min-height:50px;border:2px solid var(--ink);border-radius:9px;font:700 19px var(--sign);cursor:pointer;background:var(--panel)}#logYes{background:var(--ink);color:#fff}
+.golist{list-style:none;margin:0;padding:0}.golist button{display:block;width:100%;text-align:left;background:var(--panel);border:2px solid var(--line);border-radius:9px;padding:11px 12px;margin:0 0 8px;cursor:pointer}.golist b{display:block;font:700 21px/1.15 var(--sign)}.golist span{display:block;font-size:15px;color:var(--soft);margin-top:2px}.golist em{font-style:normal;color:var(--ink);font-weight:600}
 .fine{font-size:15px;color:var(--soft);margin:8px 0 0}
 .facts{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 14px}
 .facts dt{font-weight:700}
@@ -103,7 +106,7 @@ a{color:#0d5f75}
     <div class="locbar"><button class="locbtn" id="gps">Update location</button><p class="fine" id="place" role="status"></p></div>
     <div class="waterbox"><label for="water">Where you're fishing</label><select id="water"></select>
       <div id="oddsBox"><div class="oddsT" id="oddsT" style="margin-top:10px"></div><div class="odds" id="odds"></div></div>
-      <div class="flag" id="flag" hidden></div></div>
+      <div class="flag" id="flag" hidden></div><p class="fine" id="stockLine" hidden></p></div>
     <div class="controls">
       <div class="ctl"><div class="lab">When</div>
         <div class="seg"><button id="live">Now</button><button id="set">Pick a time</button></div>
@@ -134,6 +137,8 @@ a{color:#0d5f75}
       </div>
     </div>
     <div class="rest">
+        <section id="tipsBox"><h2 id="tipsH"></h2><ul class="tips" id="tips"></ul></section>
+        <section><h2>Log this trip</h2><div class="logbtns"><button id="logYes">Caught fish</button><button id="logNo">Skunked</button></div><p class="fine" id="logSum" role="status"></p><ul class="tips" id="logList"></ul><p class="fine"><button class="linkbtn" id="logCsv">Download my log</button></p></section>
         <section><h2>How to fish it</h2><dl class="facts" id="facts"></dl></section>
         <section id="dropBox" hidden><h2>Weight and line out</h2>
           <div class="lab">Weights you carry</div><div class="weights" id="weights"></div>
@@ -144,6 +149,10 @@ a{color:#0d5f75}
           <p class="fine"><button class="linkbtn" id="why">Why this plan</button></p></section>
     </div>
   </div>
+  <div id="go" hidden>
+    <div class="answer"><h1 style="font-size:clamp(44px,12vw,76px)">Where to go</h1><p class="lead" id="goLead"></p></div>
+    <div class="controls" style="border-bottom:0"><div class="ctl"><label for="goSp">Fish for</label><select id="goSp"></select></div><div class="ctl"><label for="goMax">Drive</label><select id="goMax"><option value="30">Within 30 min</option><option value="60">Within 1 hour</option><option value="90">Within 90 min</option><option value="999">Any distance</option></select></div></div>
+    <ol class="golist" id="goList"></ol><p class="fine" id="goNote"></p></div>
   <div id="matters" hidden></div>
 </div>
 
@@ -164,7 +173,7 @@ function sunAlt(date,lat,lng){
 }
 
 /* ---------- color library ---------- */
-const C={silver:["Silver","#c6d0d4"],chrome:["Chrome","linear-gradient(135deg,#f5f7f8,#8fa1a8 55%,#eef2f3)"],gold:["Gold","#d4a12a"],white:["White","#fff"],pink:["Hot pink","#ff4f9a"],orange:["Orange","#f47a1f"],chart:["Chartreuse","#b9e000"],red:["Red","#d3202a"],purple:["Purple","#6b3fa0"],black:["Black","#191919"],blue:["Blue","#2a66c8"],glow:["Glow","#a7f5bb"],uv:["UV purple","#7d5cff"],fire:["Firetiger","linear-gradient(120deg,#b9e000 45%,#f47a1f 46% 70%,#1f6b3a 71%)"],perch:["Perch","linear-gradient(90deg,#c9b23a 25%,#3d5a2a 26% 40%,#c9b23a 41% 60%,#3d5a2a 61% 75%,#c9b23a 76%)"],shad:["Shad","linear-gradient(#59707d 35%,#dfe6e9 36%)"],trout:["Rainbow trout","linear-gradient(#556b3a 30%,#e0697f 31% 60%,#e3e8e5 61%)"],gp:["Green pumpkin","#5c6a2f"],wm:["Watermelon","#4f7f3d"],craw:["Craw","#a6552a"],olive:["Olive","#6d7332"],bb:["Black and blue","linear-gradient(90deg,#191919 55%,#2a66c8 56%)"],wc:["White and chartreuse","linear-gradient(90deg,#fff 50%,#b9e000 51%)"]};
+const C={bubble:["Bubblegum pink","#ff8cc0"],natw:["Natural worm","#b07a5a"],fred:["Fluorescent red","#ff3b30"],silver:["Silver","#c6d0d4"],chrome:["Chrome","linear-gradient(135deg,#f5f7f8,#8fa1a8 55%,#eef2f3)"],gold:["Gold","#d4a12a"],white:["White","#fff"],pink:["Hot pink","#ff4f9a"],orange:["Orange","#f47a1f"],chart:["Chartreuse","#b9e000"],red:["Red","#d3202a"],purple:["Purple","#6b3fa0"],black:["Black","#191919"],blue:["Blue","#2a66c8"],glow:["Glow","#a7f5bb"],uv:["UV purple","#7d5cff"],fire:["Firetiger","linear-gradient(120deg,#b9e000 45%,#f47a1f 46% 70%,#1f6b3a 71%)"],perch:["Perch","linear-gradient(90deg,#c9b23a 25%,#3d5a2a 26% 40%,#c9b23a 41% 60%,#3d5a2a 61% 75%,#c9b23a 76%)"],shad:["Shad","linear-gradient(#59707d 35%,#dfe6e9 36%)"],trout:["Rainbow trout","linear-gradient(#556b3a 30%,#e0697f 31% 60%,#e3e8e5 61%)"],gp:["Green pumpkin","#5c6a2f"],wm:["Watermelon","#4f7f3d"],craw:["Craw","#a6552a"],olive:["Olive","#6d7332"],bb:["Black and blue","linear-gradient(90deg,#191919 55%,#2a66c8 56%)"],wc:["White and chartreuse","linear-gradient(90deg,#fff 50%,#b9e000 51%)"]};
 
 /* ---------- species data. d: bright-light depth, l: low-light depth, adj: season effect on rating ---------- */
 const P={
@@ -194,15 +203,15 @@ mack:{name:"Mackinaw",base:[1,4,4,3,3,3],cold:-9,hot:999,skyW:0,target:"45–52�
 koke:{name:"Kokanee",base:[0,5,4,3,2,3],cold:45,hot:65,skyW:.5,target:"about 54°F",sink:1,
  colors:{clearB:["pink","orange","chart"],clearL:["pink","glow","uv"],stained:["orange","pink","chart"],muddy:["chart","orange","pink"],deep:["uv","glow","purple"],night:["glow","uv","pink"]},
  stages:[
- {m:[10,11,0,1,2],a:0,b:99,name:"Off season for most lakes",d:[20,60],adj:-3,lures:[["Small hoochie and corn","Slow, behind a small dodger"],["Micro spoon","Vertical on marked fish"],["Target mackinaw instead","Usually the better day"]],speed:"Troll 0.8–1.2 mph",note:"Adults leave Lake Chelan for tributaries from late October into November."},
- {a:0,b:50,name:"Cold spring, shallow and slow",d:[5,25],adj:0,lures:[["Small hoochie and corn","Subtle side-to-side action"],["Small wedding-ring spinner","Behind a small dodger"],["Micro spoon","Slowest speed it still works"]],speed:"Troll 0.8–1.3 mph",note:"Below 50°F, faster gear gets ignored. Blades lose out to subtle lures."},
+ {m:[10,11,0,1,2],a:0,b:99,name:"Off season for most lakes",d:[20,60],adj:-3,lures:[["Small hoochie and corn","Slow, behind a small dodger"],["Micro spoon","Vertical on marked fish"]],speed:"Troll 0.8–1.2 mph",note:"Adults leave Lake Chelan for tributaries from late October into November."},
+ {a:0,b:50,name:"Cold water, shallow and slow",d:[5,25],adj:0,lures:[["Small hoochie and corn","Subtle side-to-side action"],["Small wedding-ring spinner","Behind a small dodger"],["Micro spoon","Slowest speed it still works"]],speed:"Troll 0.8–1.3 mph",note:"Below 50°F, faster gear gets ignored. Blades lose out to subtle lures."},
  {a:50,b:60,name:"Shallow at first light, sinking with the sun",d:[5,30],adj:1,lures:[["Dodger and hoochie, tipped with corn","Leader about 6 inches for more action"],["Dodger and spinner","Try an S-curve"],["Spoon behind a small dodger","If they are chasing"]],speed:"Troll 1–1.5 mph",note:"Vary speed and turn. Strikes often come in the turns."},
  {a:60,b:72,name:"Dropping with the warmth",d:[30,70],adj:0,lures:[["Larger dodger and spinner","Downrigger to about 54°F"],["Hoochie and corn","Just above marked fish"],["Spoon","Afternoons"]],speed:"Troll 1.2–1.6 mph",note:"Deeper means faster and a larger dodger. Lake Chelan fish can run shallower than normal, following plankton."},
  {a:72,b:99,name:"Deep summer",d:[50,100],adj:-1,lures:[["Larger dodger and spinner","Downrigger, tight to the school"],["UV hoochie and corn","Low light at depth"],["Quit by mid-morning","Fish are deep and heat is on"]],speed:"Troll 1.2–1.6 mph",note:"Temperature at depth predicts location better than anything else."}]},
 river:{name:"Upriver kings and sockeye",base:[0,5,4,2,1,3],cold:-9,hot:66,skyW:.5,target:"cool Columbia water under the warm plume",
  colors:{clearB:["pink","red","chrome"],clearL:["pink","glow","chart"],stained:["chart","pink","orange"],muddy:["chart","orange","glow"],deep:["glow","uv","chrome"],night:["glow","pink","chart"]},
  stages:[
- {m:[10,11,0,1,2,3,4],a:0,b:99,name:"Off season for upper Columbia summer runs",d:[15,50],adj:-4,lures:[["Target walleye or mackinaw","Better use of the day"],["Plug or spinner","Only where a season is open"],["Check the rules first","Seasons open by emergency rule"]],speed:"Not applicable",note:"Most of this tab is built for June through mid-October."},
+ {m:[10,11,0,1,2,3,4],a:0,b:99,name:"Off season for upper Columbia summer runs",d:[15,50],adj:-4,lures:[["Plug or spinner","Only where a season is open"],["Check the rules first","Seasons open by emergency rule"]],speed:"Not applicable",note:"Most of this tab is built for June through mid-October."},
  {a:70,b:99,name:"Thermal barrier: fish stacked",d:[20,60],l:[8,30],adj:1,lures:[["Kings: Super Bait or spinner behind a flasher","Near the channel drop-off"],["Sockeye: bare red or pink hook behind a dodger","With shrimp scent, in shade lines"],["Plug-cut herring","Early, for kings"]],speed:"Troll 0.7–1.2 mph",note:"Fish hold in the cooler Columbia below the warm Okanogan. Start on kings and switch to sockeye as the sun rises."},
  {a:62,b:70,name:"Fish moving through",d:[15,50],l:[8,30],adj:0,lures:[["Sockeye: red or pink hook behind a dodger","Slow, with scent"],["Kings: Super Bait or spinner","Along current seams"],["Change colors often","These fish strike more than they eat"]],speed:"Troll 0.7–1.2 mph",note:"No barrier yet, so fish keep going. Catch rates swing from limits to nothing."},
  {a:0,b:62,name:"Cool river, fish traveling",d:[12,40],adj:-1,lures:[["Spinner or plug","Below dams and in slack edges"],["Super Bait","Same seams"],["Bare hook and dodger","Sockeye only"]],speed:"Troll 0.7–1.5 mph",note:"Cold pulses send fish upstream and stop the bite."}]},
@@ -250,7 +259,9 @@ const SHAD={clearB:["shad","silver","perch"],clearL:["shad","white","fire"],stai
 const DARK={clearB:["gp","wm","craw"],clearL:["black","bb","gp"],stained:["bb","craw","gp"],muddy:["bb","black","red"],deep:["gp","bb","craw"],night:["black","bb","purple"]};
 const SOCK={clearB:["red","pink","chrome"],clearL:["pink","red","glow"],stained:["pink","chart","orange"],muddy:["chart","pink","orange"],deep:["glow","red","uv"],night:["glow","pink","red"]};
 const KING={clearB:["chrome","chart","pink"],clearL:["chart","chrome","glow"],stained:["chart","orange","pink"],muddy:["chart","orange","glow"],deep:["glow","chrome","chart"],night:["glow","chart","pink"]};
+const WORM={clearB:["bubble","natw","fred"],clearL:["bubble","fred","white"],stained:["bubble","chart","fred"],muddy:["chart","bubble","orange"],deep:["bubble","chart","natw"],night:["chart","bubble","black"]};
 const T={
+float:{n:"Water float and trout worm",r:[1,10],t:[38,68],mud:-1,sp:"Very slow with long pauses, or let it sit",lu:[["4-inch trout worm, 3–5 ft below a water float","Split shot 6–12 inches above the hook. Single small hook through the head"],["Same rig with a 1/64 oz jighead","Hooks more fish in the jaw than bait does"],["Wiggle it, then let it rest","Cruising trout will take a still worm. Watch for the float to stop or dip"]],c:WORM},
 cast:{n:"Casting spoons and spinners",r:[0,20],t:[42,72],mud:-1,sp:"Steady retrieve, count down to depth",lu:[["Inline spinner","Slow enough to feel the blade"],["Casting spoon","Flutter it on the drop"]],c:SPOON},
 drop:{n:"Trolling, drop weight",r:[3,60],t:[32,90],mud:0,sp:"Set speed below",lu:[["Spoon or spinner","Clip weight a few feet ahead"]]},
 longline:{n:"Trolling, long-line",r:[0,20],t:[42,72],mud:0,sp:"Troll 1.5–2.5 mph",lu:[["Wedding Ring and worm","Far behind the boat"],["Small spoon or Needlefish","Add a split shot to get down"]]},
@@ -287,7 +298,7 @@ const MAX_LINE=150;
 function dropReach(mph){const list=(S.drop&&S.drop.oz&&S.drop.oz.length)?S.drop.oz:[2];return Math.round(Math.max(...list.map(o=>dropRatio(o,mph)))*MAX_LINE)}
 function dropSpeed(stage){if(S.drop&&S.drop.speed)return S.drop.speed;const m=(stage.speed||"").match(/(\d(?:\.\d+)?)\s*[–-]\s*(\d(?:\.\d+)?)/);return m?Math.round((+m[1]+ +m[2])/2*10)/10:1.5}
 const DROP_LU={rainbow:[["Wedding Ring and worm","Keel weight stops line twist"],["Dodger and worm","Short leader behind the dodger"]],koke:[["Dodger and hoochie, corn tipped","Short leader behind the dodger"],["Dodger and spinner","Faster and deeper"]],mack:[["U-20 Flatfish, glow green","Only on shallow spring and fall fish"],["Spoon","Bump bottom now and then"]],river:[["Red or pink hooks behind a dodger","Slow, with shrimp scent"],["Super Bait behind a flasher","Kings, early"]]};
-const KIT={rainbow:{drop:3,longline:3,cast:3,leadcore:2,rigger:2,fly:2,bait:2,slipbob:2},mack:{rigger:3,vjig:3,tube:2,leadcore:1,drop:1},koke:{dodger:3,drop:3,flat:2,leadcore:2,vjig:1},river:{sock:3,kings:3,drop:2,plug:2,cast:1},walleye:{bouncer:3,jighead:3,trollcrank:3,blade:2,slipbob:2},small:{tube:3,dropshot:3,jerk:3,swim:3,topwater:2,blade:2,crank:2,vjig:1},large:{texas:3,jig:3,topwater:3,swim:3,crank:2,jerk:2,dropshot:1}};
+const KIT={rainbow:{float:3,drop:3,longline:3,cast:3,leadcore:2,rigger:2,fly:2,bait:2,slipbob:2},mack:{rigger:3,vjig:3,tube:2,leadcore:1,drop:1},koke:{dodger:3,drop:3,flat:2,leadcore:2,vjig:1},river:{sock:3,kings:3,drop:2,plug:2,cast:1},walleye:{bouncer:3,jighead:3,trollcrank:3,blade:2,slipbob:2},small:{tube:3,dropshot:3,jerk:3,swim:3,topwater:2,blade:2,crank:2,vjig:1},large:{texas:3,jig:3,topwater:3,swim:3,crank:2,jerk:2,dropshot:1}};
 const MACK_LU={rigger:{lu:[["U-20 Flatfish, glow green","Dropper weight, near bottom"],["Spoon","Within a few feet of bottom"]],sp:"Troll about 1–1.5 mph",c:{clearB:["glow","white","chrome"]}},vjig:{lu:[["Jigging spoon, 2–4 oz","Braid, tap bottom"],["Bar jig","On marked fish"]]},tube:{n:"White tube or swimbait",r:[20,200],t:[32,90],lu:[["5-inch white tube","Lift and drop"],["White swimbait, 1–2 oz","Slow rolls near bottom"]]}};
 const MAP=[[/bottom (bouncer|walker)|harness|crawler$/i,["bouncer"]],[/slip bobber|float/i,["slipbob"]],[/blade bait/i,["blade"]],[/jigging spoon|heavy jig|hair jig/i,["vjig"]],[/tube|ned/i,["tube"]],[/drop-shot/i,["dropshot"]],[/topwater|frog|popper/i,["topwater"]],[/jerkbait/i,["jerk"]],[/trolled crank/i,["trollcrank"]],[/lipless|squarebill|crankbait/i,["crank","trollcrank"]],[/swim|spinnerbait/i,["swim","jig"]],[/texas|stick worm|creature|lizard/i,["texas"]],[/^jig|and plastic/i,["jighead","jig"]],[/leech|woolly|chironomid|streamer|fly/i,["fly"]],[/^kings/i,["kings"]],[/^sockeye|hook/i,["sock"]],[/flatfish|downrigger/i,["rigger"]],[/plug|herring/i,["plug","rigger"]],[/dodger|hoochie|wedding/i,["dodger","longline","leadcore","rigger"]],[/powerbait|worm or/i,["bait"]],[/spinner|spoon/i,["cast","flat","rigger"]]];
 let STAGE_FOR_DROP=null;
@@ -312,8 +323,21 @@ function rateSetup(k,id,stage,d,t,per,sky,clar){
   if(o.low){if(low)v+=8;else{v-=18;why.push("Works best in low light")}}
   if(clar==="muddy"){v+=(o.mud||0)*10;if((o.mud||0)<0)why.push("Fish won't find it easily in muddy water")}
   if(clar==="stained"&&(o.mud||0)<=-2)v-=8;
+  if(id==="float"&&typeof S!=="undefined"){const w=currentWater();if(w&&w.id==="beehive")v+=14}
   stage.lures.forEach((l,i)=>{if(stageSetup(k,l[0],d)===id)v+=[24,14,8][i]});
   return {id,v:Math.max(5,Math.min(98,Math.round(v))),why};
+}
+function flowRow(w){if(!w||w.g!==2)return "";const f=D.flow&&D.flow["USGS-12462600"],fresh=f&&Date.now()-f.at<864e5;return `<dt>River flow</dt><dd>${fresh?Number(f.v).toLocaleString()+" cfs below Rock Island. ":""}<a href="https://www.chelanpud.org/parks-and-recreation/river-flows-and-water-temperatures" rel="noopener">Chelan PUD flows and temps</a></dd>`}
+function tipFor(k,id,w){
+  const sel=w&&w.note&&/selective|fly fishing only/i.test(w.note),rel=w&&w.rel&&w.rel.includes(k),trout=k==="rainbow"||k==="mack";
+  if(!(trout||k==="koke"))return "";
+  if(sel)return "<dt>Tipping</dt><dd>Don't. Selective gear rules prohibit bait here.</dd>";
+  if(rel)return "<dt>Tipping</dt><dd>Skip bait on release-only fish. Bait-caught trout die more often after release. If one swallows the hook, cut the line.</dd>";
+  if(k==="koke")return "<dt>Tipping</dt><dd>White shoepeg corn or pink Gulp maggots on the hook. This is standard kokanee practice.</dd>";
+  if(id==="float")return "<dt>Tipping</dt><dd>The worm doesn't need it. On a slow day, try a different color before adding bait.</dd>";
+  if(id==="bait")return "<dt>Tipping</dt><dd>PowerBait or a worm beats corn. Corn catches freshly stocked trout but guides rate it low. Float dough 12–18 inches off bottom.</dd>";
+  if(["cast","longline","drop","leadcore","rigger"].includes(id))return "<dt>Tipping</dt><dd>Pinch on a ½-inch piece of scented trout worm, hanging straight back. Keep it short on spoons so you don't kill the action. Try it on a slow day.</dd>";
+  return "";
 }
 function rankSetups(k,stage,d,t,per,sky,clar){
   const r=Object.keys(KIT[k]).map(id=>rateSetup(k,id,stage,d,t,per,sky,clar)).sort((a,b)=>b.v-a.v);
@@ -337,7 +361,8 @@ function periodAt(date,lat,lng,noon){
 }
 function pickStage(k,t,month){
   const up=month<=5;
-  return K[k].stages.find(s=>(s.m?s.m.includes(month):true)&&t>=s.a&&t<s.b&&(!s.w||(s.w==="up")===up))||K[k].stages[K[k].stages.length-1];
+  const w=typeof S!=="undefined"?currentWater():null,winter=k==="koke"&&w&&w.cv&&w.cv.koke&&w.cv.koke[month]>=2;
+  return K[k].stages.find(s=>(s.m?(s.m.includes(month)&&!winter):true)&&t>=s.a&&t<s.b&&(!s.w||(s.w==="up")===up))||K[k].stages[K[k].stages.length-1];
 }
 function shape(k,per,t,sky,clar){
   const p=K[k];let i=PERIODS.indexOf(per),v=p.base[i];
@@ -372,6 +397,7 @@ function depthFor(k,stage,per,sky,date,lat,lng){
     for(let i=0;i<288;i++){const x=new Date(+s+i*3e5);if(sunAlt(x,lat,lng)>-.8){rise=x;break}}
     if(rise&&date>rise){const add=Math.min(25,Math.round((date-rise)/36e5*10/5)*5);d=[d[0]+add,Math.min(120,d[1]+add)]}
   }
+  if(typeof S!=="undefined"){const w=currentWater(),mx=w&&MAXD[w.id];if(mx&&d[1]>mx)d=[Math.max(0,Math.min(d[0],mx-8)),mx]}
   return d;
 }
 function colorRow(p,clar,per,sky,depth){
@@ -390,9 +416,13 @@ const SP={rainbow:"Rainbow",mack:"Mackinaw",koke:"Kokanee",river:"Kings and sock
 const SP_TAB={rainbow:["trout","rainbow"],brown:["trout","rainbow"],cutt:["trout","rainbow"],mack:["trout","mack"],koke:["salmon","koke"],river:["salmon","river"],walleye:["walleye","walleye"],small:["bass","small"],large:["bass","large"]};
 const CURVE={rainbow:[2,2,3,5,5,5,3,2,2,3,3,2],brown:[2,2,3,4,4,3,2,2,3,4,4,3],cutt:[2,2,3,4,5,5,4,3,3,3,2,2],mack:[4,4,4,4,4,3,2,2,3,4,4,4],koke:[0,0,1,5,5,5,3,3,2,2,0,0],river:[0,0,0,0,0,1,4,5,3,1,0,0],walleye:[2,2,4,3,5,5,4,3,4,4,3,2],small:[1,1,2,3,5,5,4,4,4,3,2,1],large:[1,1,2,3,5,5,4,4,4,3,2,1],perch:[3,3,3,3,4,5,5,5,4,3,3,3],crappie:[2,2,3,4,5,5,3,3,4,4,2,2],bluegill:[1,1,2,3,4,5,5,5,3,2,1,1]};
 const WATERS=[
-{id:"chelanL",n:"Lake Chelan, lower basin",p:[[47.87,-120.09]],f:{mack:3,koke:3,rainbow:2,cutt:2,small:2,large:1},s:"Y",deep:1,note:"Release wild cutthroat. Landlocked salmon 15-inch minimum."},
+{id:"chelanL",n:"Lake Chelan, lower basin",p:[[47.87,-120.09]],f:{mack:3,koke:3,rainbow:2,cutt:2,small:2,large:1},s:"Y",deep:1,cv:{koke:[4,4,4,5,5,5,3,3,2,2,3,4]},note:"Release wild cutthroat. Landlocked salmon 15-inch minimum."},
 {id:"chelanU",n:"Lake Chelan, upper lake",p:[[48.15,-120.5]],f:{mack:3,cutt:3,koke:2,rainbow:1},s:"Y",deep:1,note:"Release wild cutthroat."},
-{id:"wapato",n:"Wapato Lake",p:[[47.93,-120.16]],f:{rainbow:3,koke:3,large:3,perch:2,bluegill:2,crappie:2},s:"A"},
+{id:"putters",n:"Putters Pond (Rock Island)",p:[[47.3748,-120.1329]],f:{rainbow:3,large:2,bluegill:2,perch:1},s:"Y",r:1},
+{id:"bigbow",n:"Big Bow Lake (Rock Island)",p:[[47.3832,-120.1604]],f:{rainbow:3,large:3,bluegill:1},s:"Y",r:1},
+{id:"hammond",n:"Hammond Lake (Rock Island)",p:[[47.3695,-120.1236]],f:{large:2,perch:2,rainbow:1,bluegill:1},s:"Y",r:.8},
+{id:"pit",n:"Pit Lake (Rock Island)",p:[[47.3762,-120.1405]],f:{rainbow:3,large:1,bluegill:1},s:"Y",r:.4,restricted:1,note:"Only juveniles under 15, seniors, and anglers with a designated harvester companion card may fish here."},
+{id:"wapato",n:"Wapato Lake",p:[[47.918,-120.1637]],f:{rainbow:3,koke:3,large:3,perch:2,bluegill:2,crappie:2},s:"A"},
 {id:"roses",n:"Roses Lake",p:[[47.9042,-120.1542]],f:{rainbow:3,brown:2,large:2,perch:2,crappie:2,bluegill:2},s:"Y"},
 {id:"dry",n:"Dry Lake (Manson)",p:[[47.9116,-120.1738]],f:{large:3,bluegill:3,perch:2,crappie:2,brown:1},s:"Y"},
 {id:"antilon",n:"Antilon Lakes",p:[[47.9675,-120.1576]],f:{brown:3,crappie:2},s:"Y"},
@@ -408,7 +438,7 @@ const WATERS=[
 {id:"burke",n:"Burke Lake",p:[[47.1333,-119.9158]],f:{rainbow:3},s:"M"},
 {id:"quincy",n:"Quincy Lake",p:[[47.128,-119.93]],f:{rainbow:3},s:"M"},
 {id:"evergreen",n:"Evergreen Reservoir",p:[[47.15,-119.97]],f:{walleye:2,small:2,large:2,crappie:2},s:"Y"},
-{id:"clapp",n:"Billy Clapp Lake",p:[[47.42,-119.25]],f:{small:2,walleye:2,koke:2,rainbow:2,perch:1},s:"Y"},
+{id:"clapp",n:"Billy Clapp Lake",p:[[47.42,-119.25]],f:{small:2,walleye:2,koke:2,rainbow:2,perch:1},s:"Y",cv:{koke:[3,4,4,4,3,3,3,3,2,2,1,2]}},
 {id:"banks",n:"Banks Lake",p:[[47.65,-119.3],[47.85,-119.15]],f:{walleye:3,small:3,perch:2,crappie:2,rainbow:1},s:"Y"},
 {id:"moses",n:"Moses Lake",p:[[47.12,-119.3]],f:{walleye:3,small:3,large:2,perch:2,crappie:1,rainbow:1},s:"Y"},
 {id:"potholes",n:"Potholes Reservoir",p:[[46.9962,-119.2987]],f:{walleye:3,large:3,small:2,crappie:2,perch:2,rainbow:2},s:"Y"},
@@ -419,17 +449,117 @@ const WATERS=[
 {id:"cleelum",n:"Cle Elum Lake",p:[[47.2666,-121.0936]],f:{mack:2,rainbow:1,cutt:1,brown:1},s:"Y",deep:1,x:{koke:"C"},note:"Kokanee closed for 2026."},
 {id:"fiorito",n:"Fio Rito Lakes",p:[[46.95,-120.5]],f:{rainbow:3},s:"Y",note:"Internal combustion motors prohibited."},
 {id:"mattoon",n:"Mattoon Lake",p:[[47.0,-120.54]],f:{rainbow:3},s:"Y",note:"Internal combustion motors prohibited."},
-{id:"wanapum",n:"Columbia: Wanapum pool",p:[[47.2,-120.02],[46.95,-119.98]],f:{small:3,walleye:2,large:1,rainbow:1,river:1},s:"Y",x:{river:"R2"},rel:["rainbow"],note:"Trout are release only. Salmon rules vary by species and date. Closed water sits directly below dams."},
-{id:"rockisland",n:"Columbia: Rock Island pool (Wenatchee)",p:[[47.42,-120.29],[47.5,-120.31]],f:{small:3,walleye:2,large:1,rainbow:1,river:1},s:"Y",x:{river:"R1"},rel:["rainbow"],note:"Trout are release only. Standing salmon rules close Chinook and coho unless WDFW opens them. Closed water sits directly below dams."},
-{id:"entiatlk",n:"Columbia: Lake Entiat (Rocky Reach to Wells)",p:[[47.58,-120.26],[47.75,-120.1],[47.95,-119.93]],f:{river:3,small:2,walleye:2,rainbow:1,large:1},s:"Y",x:{river:"R1"},rel:["rainbow"],g:null,note:"Trout are release only. Standing salmon rules close Chinook and coho unless WDFW opens them. Closed water sits directly below dams."},
+{id:"wanapum",g:2,n:"Columbia: Wanapum pool",p:[[47.2,-120.02],[46.95,-119.98]],f:{small:3,walleye:2,large:1,rainbow:1,river:1},s:"Y",x:{river:"R2"},rel:["rainbow"],note:"Trout are release only. Salmon rules vary by species and date. Closed water sits directly below dams."},
+{id:"rockisland",g:2,n:"Columbia: Rock Island pool (Wenatchee)",p:[[47.35,-120.1],[47.42,-120.29],[47.5,-120.31]],f:{small:3,walleye:2,large:1,rainbow:1,river:1},s:"Y",x:{river:"R1"},rel:["rainbow"],note:"Trout are release only. Standing salmon rules close Chinook and coho unless WDFW opens them. Closed water sits directly below dams."},
+{id:"entiatlk",n:"Columbia: Lake Entiat (Rocky Reach to Wells)",p:[[47.58,-120.26],[47.75,-120.1],[47.95,-119.93]],f:{river:3,small:2,walleye:2,rainbow:1,large:1},s:"Y",x:{river:"R1"},rel:["rainbow"],g:2,note:"Trout are release only. Standing salmon rules close Chinook and coho unless WDFW opens them. Closed water sits directly below dams."},
 {id:"brewster",n:"Columbia: Wells pool and Brewster",p:[[48.09,-119.78]],f:{river:3,small:2,walleye:1},s:"Y",x:{river:"R3",rainbow:"T1",brown:"T1",cutt:"T1"},g:0,note:"Standing salmon rules close Chinook and coho unless WDFW opens them. Check emergency rules every summer."},
 {id:"wenriver",n:"Wenatchee River",p:[[47.46,-120.37],[47.55,-120.63]],f:{rainbow:1,river:1},s:"E",g:1,note:"Closed to game fish under standing rules. Fish only if WDFW announces a season."},
 {id:"entiatlow",n:"Entiat River, below the falls",p:[[47.66,-120.25],[47.77,-120.4]],f:{rainbow:1,river:1},s:"C",note:"Open for whitefish only, Dec. 1 to the end of February."},
+{id:"blacklk",n:"Black Lake / Spring Hill Reservoir (Wenatchee Heights)",p:[[47.303782,-120.334751]],f:{rainbow:2,brown:2,large:1,perch:1,bluegill:1},s:"A",r:1,note:"Selective gear only, no gas motors. Trout 18-inch minimum, limit 1."},
+{id:"lilly",n:"Lilly Lake (Stemilt)",p:[[47.294792,-120.308571]],f:{rainbow:3,perch:1},s:"A",r:1},
+{id:"uwheeler",n:"Upper Wheeler Reservoir",p:[[47.287254,-120.366912]],f:{rainbow:2},s:"A",r:1,rel:["rainbow"],note:"Fly fishing only. Catch and release."},
+{id:"park",n:"Park Lake",p:[[47.588003,-119.40048]],f:{rainbow:3},s:"A",r:2},
+{id:"vic",n:"Vic Meyers (Rainbow) Lake",p:[[47.590661,-119.375001]],f:{rainbow:2,brown:1},s:"P",r:.8},
+{id:"deep",n:"Deep Lake (Grant)",p:[[47.588614,-119.323833]],f:{rainbow:3,koke:2},s:"A",r:1.5},
+{id:"alkali",n:"Alkali Lake",p:[[47.528527,-119.488081]],f:{large:2,bluegill:2,perch:2},s:"Y",r:1.5},
+{id:"lenore",n:"Lenore Lake",p:[[47.487056,-119.517425]],f:{cutt:3},s:"N",r:7,note:"Lahontan cutthroat. Selective gear only, no gas motors. Trout 18-inch minimum, limit 1. Closed around the south-end trash rack and at the inlet."},
+{id:"lenice",n:"Lenice Lake",p:[[46.84088,-119.834982]],f:{rainbow:3},s:"N",r:1.5,note:"Selective gear only, no gas motors. Trout 18-inch minimum, limit 1."},
+{id:"dusty",n:"Dusty Lake",p:[[47.139093,-119.949076]],f:{rainbow:3,brown:2},s:"N",r:.7,note:"Selective gear only, no gas motors. Trout 18-inch minimum, limit 1."},
+{id:"ancient",n:"Ancient Lake South",p:[[47.148509,-119.943755]],f:{rainbow:2,large:2},s:"Y",r:.6,note:"Hike-in only."},
+{id:"stan",n:"Stan Coffin Lake",p:[[47.148378,-119.917804]],f:{large:3,perch:1,bluegill:1,crappie:1},s:"Y",r:1,note:"Gates close at the end of September, so fall fishing is walk-in."},
+{id:"cliff",n:"Cliff Lake (Quincy walk-in)",p:[[47.133993,-119.940169]],f:{rainbow:2},s:"M",r:.25},
+{id:"crystal",n:"Crystal Lake (Quincy walk-in)",p:[[47.129911,-119.93512]],f:{rainbow:2},s:"M",r:.2},
+{id:"cup",n:"Cup Lake (Quincy walk-in)",p:[[47.131451,-119.936315]],f:{rainbow:1},s:"M",r:.15},
+{id:"martha",n:"Martha Lake (George)",p:[[47.094756,-119.836975]],f:{rainbow:3},s:"M",r:.8},
+{id:"caliche",n:"Upper Caliche Lake",p:[[47.033053,-119.9252]],f:{rainbow:3},s:"M",r:.6},
+{id:"warden",n:"Warden Lake",p:[[46.971015,-119.164773]],f:{rainbow:3,brown:1},s:"P",r:1.5},
+{id:"longg",n:"Long Lake (Grant)",p:[[46.931177,-119.20702]],f:{walleye:2,small:2,large:2,rainbow:2,perch:1,crappie:1},s:"Y",r:1.5},
+{id:"cooper",n:"Cooper Lake",p:[[47.426187,-121.176924]],f:{rainbow:3,brown:2,koke:1,cutt:1},s:"Y",r:1.5,note:"Bull trout closed."},
+{id:"lavender",n:"Lavender Lake",p:[[47.219101,-121.128595]],f:{rainbow:3},s:"Y",r:.8},
+{id:"easton",n:"Lake Easton",p:[[47.24982,-121.198193]],f:{rainbow:1,cutt:1},s:"S",r:1.5,rel:["rainbow","cutt"],note:"Selective gear only. Not stocked. Rainbow and cutthroat are release only."},
+{id:"mccabe",n:"McCabe Pond",p:[[46.924453,-120.507147]],f:{rainbow:3},s:"Y",r:.4,note:"Motors prohibited."},
+{id:"woodhouse",n:"Woodhouse Ponds",p:[[46.946425,-120.518545]],f:{rainbow:2,large:1,perch:1},s:"Y",r:.3,note:"Walk-in only."},
+{id:"kiwanis",n:"Kiwanis Pond (Cle Elum)",p:[[47.186806,-120.919742]],f:{rainbow:3},s:"Y",r:.3,restricted:1,note:"Only juveniles under 15, seniors 70 and up, and anglers with a designated harvester companion card may fish here."},
+{id:"naneum",n:"Naneum Pond (Ellensburg)",p:[[47.004286,-120.463918]],f:{rainbow:3},s:"Y",r:.3,restricted:1,note:"Only juveniles under 15, seniors 70 and up, and anglers with a designated harvester companion card may fish here."},
 {id:"entiatup",n:"Entiat River, above the falls",p:[[47.92,-120.55]],f:{cutt:2,rainbow:1},s:"S",note:"Selective gear only."}
 ];
+/* ---------- local notes: paraphrased from guide columns, WDFW and angler reports ---------- */
+const NW="Northwest Fishing Reports",GB="Fishing Magician (Dave Graybill)",WD="WDFW",SR="Spokesman-Review",ML="Mack's Lure";
+const TIPS={
+chelanL:[["Mackinaw spots: Mack Bar off the Mill Bay launch, the trench below Rocky Point, the Narrows by the Yacht Club, and the shelves off Wapato Point.",NW,"http://www.northwestfishingreports.com/Articles/Details/317"],
+["Mackinaw: staying near bottom matters more than where you are. An F7 Flatfish runs best near 1.2 mph and a U-20 near 1.4 mph. Past 200 ft there's no light, so add scent and use glow.",NW,"http://www.northwestfishingreports.com/Articles/Details/317"],
+["Mackinaw eat kokanee, so find the kokanee schools first and fish silver, metallic or UV.",NW,"https://northwestfishingreports.com/Articles/Details/653"],
+["Kokanee in spring: Manson Bay, Party Point and the Monument. Pink or orange Cha Cha or hoochie, 8–10 inch leader behind a dodger, corn, 1.2–1.7 mph, and never a straight line.",NW,"http://northwestfishingreports.com/Articles/Details/730"],
+["Winter kokanee are a real fishery here. In January look near the Yacht Club, Greens Landing and the Antilon Creek cut.",ML,"https://mackslure.com/blogs/mack-attack/brooks-winter-kokanee-fishing-on-lake-chelan"]],
+chelanU:[["Kokanee move uplake toward Stehekin in June ahead of the spawn.","Best Fishing in America","https://www.bestfishinginamerica.com/washington-chelan-lake-fishing.html"],["WDFW plants catchable cutthroat in June and July.",WD,"https://wdfw.wa.gov/fishing/locations/lowland-lakes/lake-chelan"]],
+wapato:[["Fingerling rainbows and kokanee planted one spring make 12–16 inch fish the next spring, so the April opener is the main event.",WD,"https://wdfw.wa.gov/fishing/locations/lowland-lakes/wapato-lake-chelan"],["Perch: small jig with a Power Nymph, plus a nugget of white Crappie Nibble. Big perch can school deep, so try a drop-shot.",NW,"https://northwestfishingreports.com/Reports/Details/22181"]],
+roses:[["Rainbows are planted spring and fall. Brown and tiger trout go in early fall and hold over.",WD,"https://wdfw.wa.gov/fishing/locations/lowland-lakes/roses-lake"],["Bass: work the band of bulrush and cattail around the lake.",WD,"https://wdfw.wa.gov/sites/default/files/publications/02439/wdfw02439.pdf"]],
+dry:[["Only 11 ft at its deepest, with bulrush and cattail along shore. Bring a small boat. Browns and tigers are planted each fall.",WD,"https://wdfw.wa.gov/fishing/locations/lowland-lakes/dry-lake"]],
+antilon:[["Lower Antilon is the better bet, with brown trout up to 14 inches and some larger. Upper Antilon has fished poorly since a winter kill.",WD,"https://wdfw.wa.gov/fishing/locations/lowland-lakes/antilon-lower"]],
+fish:[["Kokanee: start shallow, under 20 ft, in spring. Browns can be deeper, near 30 ft.",GB,"https://spokane.exchange/fishing-magician-april-29-2022"],["Perch are best through the ice in winter, with good catches all year.",WD,"https://wdfw.wa.gov/fishing/locations/lowland-lakes/fish-lake-chelan"]],
+clear:[["Tiny lake, planted in spring as road conditions allow. Some rainbows and tigers carry over.",WD,"https://wdfw.wa.gov/fishing/locations/lowland-lakes/clear-lake-chelan"]],
+beehive:[["Your rig: water float, 4-inch trout worm and split shot has produced for you here.","Your report",""],["Catchable rainbows are planted each spring, with occasional brook and tiger trout.",WD,"https://wdfw.wa.gov/fishing/locations/high-lakes/beehive-reservoir"]],
+jameson:[["Planted in spring and again in early fall, so opening weekend and early fall are the best shots.",WD,"https://wdfw.wa.gov/fishing/locations/lowland-lakes/jameson-lake"]],
+grimes:[["Chironomids are the main food. Nymphs do most of the work, and blue damsel dries can work near the edges.","Northwest Sportsman","https://issuu.com/mipgroup/docs/ns_6-21_digital/s/12406775"],["A float tube or small boat beats the bank.",WD,"https://wdfw.wa.gov/fishing/locations/lowland-lakes/grimes-lake"]],
+blue:[["Very popular shore lake along SR-17. Fishing depends on keeping nuisance fish out, so results swing by year.",WD,"https://wdfw.wa.gov/fishing/locations/lowland-lakes/blue-lake-grant"]],
+dryfalls:[["Fish from a float tube or pontoon. Most anglers cast chironomids toward shore under an indicator.",GB,"https://spokane.exchange/fishing-magician-march-6-2021"],["Black or red gold-bead chironomid pupae have produced here.",NW,"https://northwestfishingreports.com/Reports/Details/4433"],["Skip summer. Released trout die in the warm surface water.",WD,"https://wdfw.wa.gov/fishing/locations/lowland-lakes/dry-falls-lake"]],
+burke:[["The first month after March 1 fishes best. Most of the shoreline is fishable.",WD,"https://wdfw.wa.gov/fishing/locations/lowland-lakes/burke-lake"]],
+quincy:[["Early-season fly anglers do well here, and some carryover rainbows reach 18 inches.",SR,"https://spokesman.com/stories/2021/mar/10/alan-lieres-fishing-hunting-report-for-march-11"]],
+evergreen:[["Cast for bass along both sides and troll the middle for walleye. It's drawn down in winter and usually starts filling in April.",GB,"https://fishingmagician.com/Reports/2025/March/Tuesday-11.aspx"]],
+clapp:[["Walleye: the very top end, where Summer Falls pours in. Current can be fierce.",GB,"https://fishingmagician.com/Reports/2026/June/Wednesday-10.aspx"],["Kokanee swing year to year. In good years, 20-inch fish come in late winter through early spring.",WD,"https://wdfw.wa.gov/fishing/locations/lowland-lakes/billy-clapp-lake"]],
+banks:[["Walleye: Barker Flats in 20–25 ft first, then the Punch Bowl (often calm when it's windy) and the sand flats behind Steamboat Rock.",GB,"https://fishingmagician.com/Reports/2024/May/Thursday-16.aspx"],["Walleye spinner: Blue Tiger blade on a Slow Death hook.",GB,"https://fishingmagician.com/Reports/2017/June/Friday-09.aspx"],["Smallmouth: a watermelon lizard along broken basalt and shale slides.",GB,"https://fishingmagician.com/Reports/2020/May/Friday-29.aspx"],["Smallmouth in May: lipless rattle baits on the Barker Canyon flats, following the old roadbed.",NW,"https://northwestfishingreports.com/Articles/Details/125"]],
+moses:[["Expect fewer walleye than Potholes but more big ones.",GB,"https://fishingmagician.com/Reports/2021/March/Monday-22.aspx"],["After the spawn, walleye gather where water leaves Moses Lake toward Potholes.","The Outdoor Line","https://dev.theoutdoorline.com/?p=86"]],
+potholes:[["Walleye: Lind Coulee, Crab Creek and the dunes. In June they've held on weed lines in 8–15 ft.",NW,"https://northwestfishingreports.com/Reports/Details/34090"],["Largemouth in October: slow-roll a spinnerbait around beaver huts and dune points.",NW,"https://northwestfishingreports.com/Articles/Details/232"],["Perch can be caught right off the MarDon dock.",NW,"https://northwestfishingreports.com/Articles/Details/232"],["Walleye can hide in flooded brush as shallow as 3 ft in Lind Coulee.","Crappie.com forum","https://old.crappie.com/crappie/washington/133396-moses-lake-potholes-post1132765.html"]],
+rufus:[["Triploids: boaters focus on the net pens and the area just above Chief Joseph Dam. Soak PowerBait or worms on bottom below the pens.",GB,"https://fishingmagician.com/Stories/Winter-Produces-Trophy-Rainbow-At-Rufus-Woods-Rese.aspx"],["Anchor in about 30 ft below the pens and cast a lead-head jig tipped with worm.",GB,"https://fishingmagician.com/Stories/Winter-Produces-Trophy-Rainbow-At-Rufus-Woods-Rese.aspx"],["Add a Smile Blade above the jig when there's enough current to spin it. Float bait above the weeds.","Pautzke","https://pautzke.com/?p=12780"],["When lures fail, white or green PowerBait can still work.","Yakima Herald","https://www.yakimaherald.com/sports/outdoors/rob-phillips-sunny-days-helped-shake-stay-at-home-pandemic-blues-and-provide-several-goods/article_bb212604-0022-599f-956f-0d2d6ba51d2e.html"]],
+roosevelt:[["Rainbows near Keller Ferry have hit under about 4 colors of lead-core.",SR,"https://www.spokesman.com/stories/2014/jan/24/hunting-and-fishing/"],["Kokanee: pink mini squid and Smile Blade tipped with maggots or white corn, behind a flasher.",SR,"https://www.spokesman.com/stories/2014/jan/24/hunting-and-fishing/"],["Set kokanee gear above the school. Running it at the school's depth can put it below the fish.",GB,"https://spokane.exchange/fishing-magician-june-16-2023"]],
+kachess:[["Kokanee reach 8–12 inches by early June. Troll or still-fish, and chumming is allowed.",WD,"https://wdfw.wa.gov/fishing/locations/lowland-lakes/kachess-lake"]],
+keechelus:[["Boat launching gets poor after the late-summer drawdown. Standard kokanee gear and trolling flies have worked.",NW,"https://cdn.northwestfishingreports.com/Reports/Details/54978"]],
+cleelum:[["WDFW encourages keeping mackinaw here to help juvenile sockeye. The ramp can go dry in the summer drawdown.",WD,"https://wdfw.wa.gov/fishing/locations/lowland-lakes/cle-elum-lake"]],
+rockisland:[["Walleye anglers near East Wenatchee have used trolled spinners, jigs and blade baits.",NW,"https://www.northwestfishingreports.com/Reports/Details/3758"],["Below Rocky Reach Dam is a popular sockeye spot in open seasons. Stay out of the closed water at the dam.",GB,"https://spokane.exchange/fishing-magician-july-1-2022"],["Check river flow first with Chelan PUD's free Currents app. Flow changes the bite.",GB,"https://www.spokane.exchange/fishing-magician-may-13-2022"]],
+entiatlk:[["Waters above Brewster are not the only summer option. Chelan Falls can produce Chinook in July in open seasons.","Northwest Sportsman","https://issuu.com/mipgroup/docs/ns_7-21_digital/s/12720447"],["Check flows with Chelan PUD's free Currents app before you launch.",GB,"https://www.spokane.exchange/fishing-magician-may-13-2022"]],
+brewster:[["Sockeye staple: shrimp-tipped spinner behind a dodger, 0.7–1.2 mph, in the shaded water.",NW,"https://northwestfishingreports.com/Reports/UserReports?id=42076"],["Fish hold at the drop-off from the 12–20 ft mouth into the 60 ft channel.","Trolling Flies","https://trollingflies.com/brewsterpoolsockeye"],["Start on kings early and switch to sockeye gear as the sun comes up.","Pautzke","https://pautzke.com/chinook-sockeye-invading-upper-columbia-river/"]],
+putters:[["Rainbows are planted March–April and sometimes fall. 7,250 went in on Sept. 29, 2026.",WD,"https://wdfw.wa.gov/fishing/reports/stocking/trout-plants/all?hatchery=CHELAN+PUD+HATCHERY"],["Good bank-fishing pond. Dense weeds can make bass fishing tough, so look for edges.",WD,"https://wdfw.wa.gov/sites/default/files/publications/00272/wdfw00272.pdf"]],
+bigbow:[["Best known for largemouth. Shore access is at the west end and a rough launch is at the east end. Most anglers run electric motors.",GB,"https://fishingmagician.com/Reports/2012/April/Wednesday-18.aspx"]],
+hammond:[["Cattails limit the shoreline, so a small boat helps. Perch and pumpkinseed are overabundant.",WD,"https://wdfw.wa.gov/fishing/locations/lowland-lakes/hammond-lake"]]
+};
+const CL="https://fishingbooker.com/blog/lake-chelan-fishing/";
+const MORE={
+chelanL:[["Where: Colyar Ledge early and the face of Manson Bay have been named for trolled lake trout.","BD Outdoors forum","https://www.bdoutdoors.com/forums/threads/lake-chelan.628735/"],["Shore: anglers around Manson and Chelan catch cutthroat and smallmouth from the bank.",SR,"https://www.spokesman.com/stories/2023/jul/05/alan-lieres-hunt-fish-report-for-july"]],
+chelanU:[["Stream option: the Stehekin River and tributaries hold rainbow and cutthroat for fly anglers.","FishingBooker",CL]],
+wapato:[["Where: launch at the public ramp by the campgrounds. Max depth is about 68 ft.",WD,"https://wdfw.wa.gov/sites/default/files/publications/02439/wdfw02439.pdf"],["Largemouth run 12–15 inches and fish best spring and summer.",WD,"https://wdfw.wa.gov/fishing/locations/lowland-lakes/wapato-lake-chelan"]],
+roses:[["Where: south-side public access has the launch, dock and ADA platform. Bank anglers do well near there.",WD,"https://wdfw.wa.gov/fishing/locations/lowland-lakes/roses-lake"],["Max depth is about 30 ft. A few very large channel catfish remain.",WD,"https://wdfw.wa.gov/sites/default/files/publications/02439/wdfw02439.pdf"]],
+dry:[["Largemouth can reach 6 pounds. Bluegill grow to about 10 inches.",WD,"https://wdfw.wa.gov/sites/default/files/publications/02439/wdfw02439.pdf"]],
+antilon:[["Crappie are mainly in Lower Antilon. Shore access is poor, so bring a small boat.",WD,"https://wdfw.wa.gov/sites/default/files/publications/02439/wdfw02439.pdf"]],
+fish:[["Access is mainly through Cove Resort. Spring and fall are best for stocked kokanee and rainbows.",WD,"https://wdfw.wa.gov/fishing/locations/lowland-lakes/fish-lake-chelan"],["Crawlers are a simple, reliable perch bait here.",GB,"https://fishingmagician.com/Gallery.aspx?page=55"]],
+alta:[["Trolling lures or spinners baited with worms is the popular method. Launches are at the north shore state park and the opposite end.","Okanogan Country","https://okanogancountry.com/poi/alta-lake"],["Fishing holds up better in summer here than on most lakes. Fish deeper when it's hot.",WD,"https://wdfw.wa.gov/fishing/locations/lowland-lakes/alta-lake"],["Kokanee of 11–13 inches are a newer add-on fishery.","Best Fishing in America","https://www.bestfishinginamerica.com/?p=11026"]],
+jameson:[["Where: the north end in front of the resort and farm out-fished the rest of the lake on one fall trip.",NW,"https://cdn.northwestfishingreports.com/Reports/Details/38690"],["Wedding Ring or gang troll with worm, or green Needlefish.",NW,"https://northwestfishingreports.com/Reports/Details/13098"],["Good bank access at both the north and south ends.",WD,"https://wdfw.wa.gov/fishing/locations/lowland-lakes/jameson-lake"]],
+blue:[["Where: stick to the shallower north or south ends when powerboats are out. WDFW's launch is mid-lake on the east side.","Best Fishing in America","https://www.bestfishinginamerica.com/?p=8067"],["Trollers have limited on hardware here while shore fishing lagged.",NW,"https://cdn.northwestfishingreports.com/Reports/UserReports?id=9964"]],
+burke:[["Yearlings average about 12 inches and holdovers run 14–20. Max depth about 28 ft.",WD,"https://wdfw.wa.gov/fishing/locations/lowland-lakes/burke-lake"]],
+quincy:[["Max depth about 26 ft, and most of it is around 10. Shore fishing works here.",WD,"https://wdfw.wa.gov/sites/default/files/sepa/2012/12055_plan_burke.pdf"]],
+evergreen:[["Where: the east-end access is off the Quincy to George highway. A west-end ramp is also available.",GB,"https://fishingmagician.com/Reports/2025/March/Tuesday-11.aspx"]],
+clapp:[["Where: kokanee trollers run long loops above the big basalt island.",GB,"https://fishingmagician.com/Reports/2023/June/Friday-30.aspx"],["Most of the shore is steep basalt, and bank access is mainly at the launch and park. Smallmouth over 4 pounds show up in spring.","Best Fishing in America","https://www.bestfishinginamerica.com/?p=8725"]],
+banks:[["Where: Devils Punch Bowl road bed has produced walleye on a drop-shot.",NW,"https://northwestfishingreports.com/Reports/Details/55576"],["Smallmouth need vertical drops: basalt walls and rocks that fall into 30–40 ft, where rock changes to gravel.",NW,"https://cdn.northwestfishingreports.com/Reports/Details/19151"],["Also try the highway riprap north of the Punch Bowl and the coves north of Steamboat Rock.",NW,"https://northwestfishingreports.com/Reports/Details/55424"]],
+moses:[["Smallmouth take crankbaits, tube jigs and plastic worms.",SR,"https://www.spokesman.com/stories/2024/jul/04/alan-lieres-hunting-and-fishing-report-for-july-4-"],["Perch are usually best fall through winter. The usual ice spot is near Blue Heron Park.",WD,"https://wdfw.wa.gov/sites/default/files/publications/02439/wdfw02439.pdf"]],
+potholes:[["Where: after the spawn, try the mouths of Frenchman's Wasteway and Lind Coulee with shallow crankbaits.","The Outdoor Line","https://dev.theoutdoorline.com/?p=86"],["Summer mornings: buzzbaits and frogs in the dunes, poppers in Lind Coulee and at the dam face.","BassResource forum","https://bassresource.com/bass-fishing-forums/topic/119815-potholes-resevoir-wa"]],
+rufus:[["Bank anglers fish from Chief Joseph Dam up the south-side river road to Brandt's Landing.","Everett Herald","https://www.heraldnet.com/sports/rufus-lake-triploids/"],["Where: trollers work the can line just above the dam.",NW,"https://northwestfishingreports.com/Articles/Details/503"],["Seatons Grove launch is about a 10-mile run to the net pens.",GB,"https://fishingmagician.com/Stories/Winter-Produces-Trophy-Rainbow-At-Rufus-Woods-Rese.aspx"]],
+roosevelt:[["Where: walleye drag bottom bouncers in the Spokane Arm near Buoy 5, and the flats at Colville and Bradbury.",SR,"https://www.spokesman.com/stories/2023/jul/05/alan-lieres-hunt-fish-report-for-july"],["Kokanee: try Hunters and from Whitestone Rock down toward the dam.","Best Fishing in America","https://www.bestfishinginamerica.com/?p=8936"],["Trout have favored orange, pink or watermelon Apex, and flies tipped with worm at 35–45 ft.",SR,"https://www.spokesman.com/stories/2010/sep/24/hunting-and-fishing/"]],
+entiatlk:[["Where: the cool-water bubbles around the Entiat and Chelan river mouths concentrate summer Chinook.",SR,"https://www.spokesman.com/stories/2024/jul/04/alan-lieres-hunting-and-fishing-report-for-july-4-"]],
+brewster:[["Also try the Wells Dam tailrace for summer Chinook, staying out of the closed water.",SR,"https://www.spokesman.com/stories/2024/jul/04/alan-lieres-hunting-and-fishing-report-for-july-4-"],["Sockeye usually run 8–30 ft deep. Warm water sits on top, cool water below.","Pautzke","https://pautzke.com/chinook-sockeye-invading-upper-columbia-river/"]],
+kachess:[["Bring a knotless net. Bull trout must be released carefully.",NW,"https://cdn.northwestfishingreports.com/Articles/Details/684"]],
+keechelus:[["Trout hold near the creek mouths in some reports.",NW,"https://cdn.northwestfishingreports.com/Forum/viewtopic.php?p=140489"]],
+cleelum:[["Mackinaw up to 20 pounds have been taken.",WD,"https://wdfw.wa.gov/fishing/locations/lowland-lakes/cle-elum-lake"]],
+putters:[["Where: public access is on the northwest shore, shared with Pit Pond, and along the north shoreline. Make sure you're on Putters.",WD,"https://wdfw.wa.gov/fishing/locations/lowland-lakes/putters-lake"],["WDFW's survey found more kinds of fish here than trout alone, including largemouth, bluegill and yellow perch.",WD,"https://wdfw.wa.gov/publications/00272"]],
+bigbow:[["Rainbows are stocked in March and April. Bass over 12 inches are limited, and bluegill run 7–8 inches.",WD,"https://wdfw.wa.gov/fishing/locations/lowland-lakes/big-bow-lake"]],
+entiatup:[["Reach it from the end of Entiat River Road. Expect small rainbow, cutthroat and brook trout.",NW,"https://cdn.northwestfishingreports.com/Articles/Details/255"]]
+};
+for(const k in MORE)TIPS[k]=[...(TIPS[k]||[]),...MORE[k]];
+const srcType=l=>l===WD?"Official":l==="Your report"?"Your rig":/forum|Northwest Fishing Reports|Trolling Flies/i.test(l)?"Angler report":/Mack|Pautzke/.test(l)?"Tackle brand":"Local column";
+const STOCK_SEED={putters:["2026-09-29","Rainbow",7250],chelanL:["2026-09-09","Rainbow",22500],antilon:["2026-09-15","Tiger and brown",4850],roses:["2026-09-15","Tiger and brown",4000],dry:["2026-09-14","Brown",1000],beehive:["2026-04-08","Rainbow",2650],fish:["2026-04-10","Rainbow",10492],fiorito:["2026-06-03","Rainbow",3430],mattoon:["2026-05-11","Rainbow",3240],pit:["2026-04-15","Rainbow",2700],cooper:["2026-05-26","Rainbow",3000],lavender:["2026-06-02","Rainbow",2702],mccabe:["2026-04-28","Rainbow",1008],woodhouse:["2026-03-31","Rainbow",308],kiwanis:["2026-06-29","Rainbow",805],naneum:["2026-05-11","Rainbow",1400]};
+const STOCK_RE={blacklk:/SPRING HILL|BLACK L.*CHEL/,lilly:/LILL?Y L.*CHEL/,uwheeler:/WHEELER/,park:/PARK L.*GRAN/,vic:/VIC MEYERS|RAINBOW L.*GRAN/,deep:/DEEP L.*GRAN/,alkali:/ALKALI/,lenore:/LENORE/,lenice:/LENICE/,dusty:/DUSTY/,ancient:/ANCIENT/,cliff:/CLIFF L.*GRAN/,crystal:/CRYSTAL L.*GRAN/,cup:/CUP L.*GRAN/,martha:/MARTHA L.*GRAN/,caliche:/CALICHE/,warden:/WARDEN/,longg:/LONG L.*GRAN/,cooper:/COOPER L.*KITT/,lavender:/LAVEND[AE]R/,mccabe:/MCCABE/,woodhouse:/WOODHOUSE/,kiwanis:/KIWAN[AI]S/,naneum:/NANEUM/,putters:/PUTTERS/,bigbow:/BIG BOW/,hammond:/HAMMOND/,pit:/PIT L/,wapato:/WAPATO/,roses:/ROSES/,dry:/^DRY L.*CHEL/,antilon:/ANTILON/,fish:/FISH L.*CHEL/,clear:/CLEAR L.*CHEL/,beehive:/BEEHIVE/,alta:/ALTA L/,jameson:/JAMESON/,blue:/BLUE L.*GRAN/,burke:/BURKE/,quincy:/QUINCY/,moses:/MOSES/,potholes:/POTHOLES/,banks:/BANKS/,chelanL:/CHELAN/,fiorito:/FIO ?RITO/,mattoon:/MATTOON/,clapp:/CLAPP/,dryfalls:/DRY FALLS/,grimes:/GRIMES/};
+const MAXD={quincy:26,burke:28,dry:11,roses:30,wapato:68};
 function fourthSatApr(y){const d=new Date(y,3,1);d.setDate(1+(6-d.getDay()+7)%7+21);return d}
 function satBeforeMemorial(y){const d=new Date(y,4,31);d.setDate(31-(d.getDay()+6)%7-2);return d}
-function seasonWindow(c,y){return ({A:[fourthSatApr(y),new Date(y,9,31)],M:[new Date(y,2,1),new Date(y,8,30)],N:[new Date(y,2,1),new Date(y,10,30)],J:[new Date(y,5,1),new Date(y,7,31)],S:[satBeforeMemorial(y),new Date(y,9,31)],R1:[new Date(y,6,1),new Date(y,7,31)],R2:[new Date(y,6,1),new Date(y,9,15)],R3:[new Date(y,6,16),new Date(y,7,31)],T1:[new Date(y,6,16),new Date(y,7,15)]})[c]}
+function seasonWindow(c,y){return ({A:[fourthSatApr(y),new Date(y,9,31)],M:[new Date(y,2,1),new Date(y,8,30)],P:[fourthSatApr(y),new Date(y,8,30)],N:[new Date(y,2,1),new Date(y,10,30)],J:[new Date(y,5,1),new Date(y,7,31)],S:[satBeforeMemorial(y),new Date(y,9,31)],R1:[new Date(y,6,1),new Date(y,7,31)],R2:[new Date(y,6,1),new Date(y,9,15)],R3:[new Date(y,6,16),new Date(y,7,31)],T1:[new Date(y,6,16),new Date(y,7,15)]})[c]}
 function seasonStatus(c,date){
   if(c==="Y")return {open:true};
   if(c==="C")return {open:false,never:true,word:"Closed"};
@@ -439,20 +569,21 @@ function seasonStatus(c,date){
   return {open:false,next:day<a?a:seasonWindow(c,y+1)[0]};
 }
 const kmTo=(w,lat,lng)=>Math.min(...w.p.map(q=>km(lat,lng,q[0],q[1])));
-const GPS_RANGE=25;
+const RANGE={chelanL:12,chelanU:18,banks:22,moses:10,potholes:10,rufus:28,roosevelt:60,kachess:7,keechelus:7,cleelum:7,wanapum:12,rockisland:8,entiatlk:14,brewster:8,wenriver:6,entiatlow:6,entiatup:6,clapp:6,wapato:2,fish:2.5,wenlake:5};
+const rangeOf=w=>w.r||RANGE[w.id]||2.5;
+function nearestWater(lat,lng){const a=WATERS.map(w=>({w,d:kmTo(w,lat,lng)})).filter(x=>x.d<=rangeOf(x.w)).sort((p,q)=>p.d-q.d);return a.length?a[0].w:null}
 function currentWater(){
   if(S.water)return WATERS.find(w=>w.id===S.water)||null;
   const lat=S.gps?S.gps[0]:S.lat,lng=S.gps?S.gps[1]:S.lng;
-  const near=WATERS.map(w=>({w,d:kmTo(w,lat,lng)})).sort((a,b)=>a.d-b.d)[0];
-  return near&&near.d<=GPS_RANGE?near.w:null;
+  return nearestWater(lat,lng);
 }
 function oddsFor(w,date){
   const m=date.getMonth();
-  return Object.keys(w.f).map(sp=>{const st=seasonStatus((w.x&&w.x[sp])||w.s,date);return {sp,v:CURVE[sp][m]*w.f[sp],open:st.open}}).filter(o=>o.open&&o.v>0).sort((a,b)=>b.v-a.v).slice(0,4);
+  return Object.keys(w.f).map(sp=>{const st=seasonStatus((w.x&&w.x[sp])||w.s,date);return {sp,v:((w.cv&&w.cv[sp])||CURVE[sp])[m]*w.f[sp],open:st.open}}).filter(o=>o.open&&o.v>0).sort((a,b)=>b.v-a.v).slice(0,4);
 }
 
 /* ---------- live conditions ---------- */
-const GAUGES=[{id:"USGS-12447200",name:"Okanogan River at Malott",lat:48.2813,lng:-119.7045,km:15},{id:"USGS-12462500",name:"Wenatchee River at Monitor",lat:47.4993,lng:-120.4245,km:10}];
+const GAUGES=[{id:"USGS-12447200",name:"Okanogan River at Malott",lat:48.2813,lng:-119.7045,km:15},{id:"USGS-12462500",name:"Wenatchee River at Monitor",lat:47.4993,lng:-120.4245,km:10},{id:"USGS-12462600",name:"Columbia below Rock Island Dam",lat:47.333,lng:-120.08,km:10}];
 function km(a,b,c,d){const x=(d-b)*RAD*Math.cos((a+c)/2*RAD),y=(c-a)*RAD;return Math.hypot(x,y)*6371}
 function hourIndex(w,date){const p=n=>String(n).padStart(2,"0");return w.time.indexOf(`${date.getFullYear()}-${p(date.getMonth()+1)}-${p(date.getDate())}T${p(date.getHours())}:00`)}
 function skyFrom(w,i){
@@ -502,6 +633,24 @@ async function loadGauge(g){
   const a=(j.features||[]).map(x=>x.properties).filter(p=>p&&p.value!=null&&!isNaN(+p.value)).sort((p,q)=>new Date(q.time)-new Date(p.time))[0];
   if(a){const c=+a.value;D.gauges[g.id]={f:Math.round(c*9/5+32),at:+new Date(a.time)}}
 }
+async function loadFlow(id){
+  const j=await getJSON(`https://api.waterdata.usgs.gov/ogcapi/v1/collections/latest-continuous/items?f=json&monitoring_location_id=${id}&parameter_code=00060&limit=5`);
+  const a=(j.features||[]).map(x=>x.properties).filter(p=>p&&p.value!=null&&!isNaN(+p.value)).sort((p,q)=>new Date(q.time)-new Date(p.time))[0];
+  if(a){D.flow=D.flow||{};D.flow[id]={v:Math.round(+a.value),at:+new Date(a.time)}}
+}
+/* stocking feed: reads the dataset's own column list first, so a renamed column won't break it */
+async function loadStock(){
+  if(D.stockAt&&Date.now()-D.stockAt<432e5)return;
+  const cols=await getJSON("https://data.wa.gov/api/views/6fex-3r7d/columns.json");
+  const f=re=>(cols.find(c=>re.test(c.fieldName))||{}).fieldName;
+  const dc=f(/stock.*date|release.*date|plant.*date|^date|date$/i),lc=f(/lake|release.*loc|location|water/i),sc=f(/species/i),nc=f(/number|count|released|num/i);
+  if(!dc||!lc)throw new Error("columns");
+  const since=new Date(Date.now()-120*864e5).toISOString().slice(0,10);
+  const rows=await getJSON(`https://data.wa.gov/resource/6fex-3r7d.json?$where=${encodeURIComponent(dc+" >= '"+since+"'")}&$order=${encodeURIComponent(dc+" DESC")}&$limit=5000`);
+  const out={};
+  rows.forEach(r=>{const name=String(r[lc]||"").toUpperCase(),date=String(r[dc]||"").slice(0,10);if(!date)return;for(const id in STOCK_RE){if(STOCK_RE[id].test(name)){const o=out[id];const n=+(r[nc]||0);if(!o)out[id]={date,sp:r[sc]||"Trout",n};else if(o.date===date)o.n+=n;break}}});
+  D.stock=out;D.stockAt=Date.now();
+}
 let busy=false,again=false,skyOpen=false,tempOpen=false;
 function lockBtn(on){$("gps").disabled=on;$("gps").textContent=on?"Updating location":"Update location"}
 async function refresh(force){
@@ -513,8 +662,9 @@ async function refresh(force){
   const moved=D.lat==null||km(S.lat,S.lng,D.lat,D.lng)>2,stale=Date.now()-D.at>18e5;
   const jobs=[];
   if(force||moved||stale||!D.w)jobs.push(loadWeather().then(()=>1,()=>0));
-  const need=new Set([GAUGES[0]]),cw=currentWater();if(cw&&cw.g!=null)need.add(GAUGES[cw.g]);
+  const need=new Set([GAUGES[0],GAUGES[2]]),cw=currentWater();if(cw&&cw.g!=null)need.add(GAUGES[cw.g]);
   need.forEach(g=>jobs.push(loadGauge(g).catch(()=>0)));
+  jobs.push(loadFlow("USGS-12462600").catch(()=>0));jobs.push(loadStock().catch(()=>0));
   const res=await Promise.all(jobs);busy=false;saveD();
   status=loc+(D.w?(res[0]===0&&(force||moved||stale)?`No connection. Showing weather from ${ago(Date.now()-D.at)}.`:`Conditions updated ${fmt(new Date(D.at))}.`):"Weather isn't available yet. Tap your sky and enter a water temperature.");
   lockBtn(false);render();
@@ -522,7 +672,7 @@ async function refresh(force){
 }
 
 /* ---------- state and rendering ---------- */
-const defaults={tab:"trout",kind:{trout:"rainbow",salmon:"koke",walleye:"walleye",bass:"small"},temp:"",clar:"clear",sky:null,live:true,water:"",gps:null,setup:{},drop:{oz:[1,2],speed:null},when:null,lat:47.84,lng:-120.02,place:"the Lake Chelan area"};
+const defaults={tab:"go",goMax:60,goSp:"",kind:{trout:"rainbow",salmon:"koke",walleye:"walleye",bass:"small"},temp:"",clar:"clear",sky:null,live:true,water:"",gps:null,setup:{},drop:{oz:[1,2],speed:null},when:null,lat:47.84,lng:-120.02,place:"the Lake Chelan area"};
 let S=Object.assign({},defaults);
 try{S=Object.assign(S,JSON.parse(localStorage.getItem("bite2")||"{}"));S.kind=Object.assign({},defaults.kind,S.kind);S.setup=S.setup||{};S.drop=Object.assign({oz:[1,2],speed:null},S.drop)}catch(e){}
 const save=()=>{try{localStorage.setItem("bite2",JSON.stringify(S))}catch(e){}};
@@ -535,11 +685,56 @@ function seg(id,opts,key,cur){
   $(id).innerHTML="";
   opts.forEach(([v,t])=>{const b=document.createElement("button");b.textContent=t;b.setAttribute("aria-pressed",(cur===undefined?S[key]:cur)===v);b.onclick=()=>{S[key]=v;save();render()};$(id).append(b)});
 }
+let LAST=null,LOG=[];
+try{LOG=JSON.parse(localStorage.getItem("biteLog")||"[]")}catch(e){}
+const saveLog=()=>{try{localStorage.setItem("biteLog",JSON.stringify(LOG))}catch(e){}};
+function addLog(hit){if(!LAST)return;LOG.unshift(Object.assign({at:Date.now(),hit},LAST));saveLog();renderLog()}
+function renderLog(){
+  if(!LAST)return;
+  const here=LOG.filter(e=>e.wid===LAST.wid&&e.kind===LAST.kind),hits=here.filter(e=>e.hit);
+  const by={};here.forEach(e=>{by[e.setup]=by[e.setup]||[0,0];by[e.setup][1]++;if(e.hit)by[e.setup][0]++});
+  const best=Object.entries(by).filter(x=>x[1][0]>0).sort((a,b)=>b[1][0]/b[1][1]-a[1][0]/a[1][1])[0];
+  $("logSum").textContent=here.length?`${LAST.kname} at ${LAST.water}: fish on ${hits.length} of ${here.length} logged trips.${best?` Best so far: ${best[0]} (${best[1][0]} of ${best[1][1]}).`:""}`:"Saves today's conditions and setup. Log skunked days too, so the record stays honest.";
+  $("logList").innerHTML=LOG.slice(0,5).map(e=>`<li><b>${e.hit?"Caught":"Skunked"}</b>, ${e.water}<small>${new Date(e.at).toLocaleDateString([],{month:"short",day:"numeric"})} ${new Date(e.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}. ${e.kname}, ${e.setup}, ${e.color}, ${e.temp}°F. <button class="linkbtn" data-del="${e.at}">Delete</button></small></li>`).join("");
+  $("logCsv").hidden=!LOG.length;
+}
+const TIP_SP={mack:/mackinaw|lake trout/i,koke:/kokanee/i,river:/chinook|kings?\b|sockeye|salmon|coho/i,walleye:/walleye/i,small:/smallmouth|\bbass\b/i,large:/largemouth|\bbass\b/i,rainbow:/rainbow|\btrout\b|\bplants?\b|\bstocked\b/i};
+function tipFits(t,k){const c=t.replace(/lake trout/ig,"mackinaw");if(/^mackinaw/i.test(c))return k==="mack";const hit=Object.keys(TIP_SP).filter(s=>TIP_SP[s].test(c));return !hit.length||hit.includes(k)}
+function stockFor(id){const r=D.stock&&D.stock[id];if(r)return r;const s=STOCK_SEED[id];return s?{date:s[0],sp:s[1],n:s[2],seed:1}:null}
+function daysSince(iso,now){return Math.floor((now-new Date(iso+"T12:00:00"))/864e5)}
+function rankWaters(date,sp,maxMin){
+  const gl=S.gps||[S.lat,S.lng],m=date.getMonth(),wind=D.w&&hourIndex(D.w,date)>=0?D.w.wind_speed_10m[hourIndex(D.w,date)]:null;
+  return WATERS.filter(w=>!w.restricted).map(w=>{
+    const km0=kmTo(w,gl[0],gl[1]),min=Math.round(km0*1.2/80*60);
+    let ods=oddsFor(w,date);if(sp)ods=ods.filter(o=>o.sp===sp);
+    if(!ods.length||min>maxMin)return null;
+    const top=ods[0];let score=top.v/15*60;const why=[`${SP[top.sp]}${ods[1]?", "+SP[ods[1].sp]:""}`];
+    const st=stockFor(w.id),trout=["rainbow","brown","cutt"].includes(top.sp);
+    if(st&&(!sp||["rainbow","brown","cutt"].includes(sp))){const dd=daysSince(st.date,date);if(dd>=0&&dd<=14){score+=30;why.push(`planted ${dd} days ago`)}else if(dd<=45&&dd>=0){score+=trout?18:6;why.push(`planted ${dd} days ago`)}else if(dd<=90&&dd>=0)score+=trout?6:0}
+    if(wind!=null&&wind>=15&&rangeOf(w)>=10){score-=12;why.push("big water, windy")}
+    if(w.rel&&w.rel.includes(top.sp)){score-=15;why.push("release only")}
+    if(TIPS[w.id]&&TIPS[w.id].length>=4)score+=4;
+    score-=min/12;
+    return {w,min,score,why,top:top.sp};
+  }).filter(Boolean).sort((a,b)=>b.score-a.score);
+}
+function renderGo(){
+  const date=nowDate(),sel=$("goSp");
+  if(!sel.options.length)sel.innerHTML='<option value="">Anything</option>'+Object.keys(SP).map(k=>`<option value="${k}">${SP[k]}</option>`).join("");
+  sel.value=S.goSp;$("goMax").value=String(S.goMax);
+  const list=rankWaters(date,S.goSp,S.goMax);
+  $("goLead").textContent=list.length?`Best open waters for ${date.toLocaleDateString([],{weekday:"long",month:"long",day:"numeric"})}`:"Nothing open matches that. Try a longer drive or a different fish.";
+  $("goList").innerHTML="";
+  list.forEach(x=>{const li=document.createElement("li"),b=document.createElement("button");b.innerHTML=`<b>${x.w.n}</b><span><em>${x.why[0]}</em>${x.why[1]?", "+x.why.slice(1).join(", "):""}. About ${x.min} min away.</span>`;b.onclick=()=>{S.water=x.w.id;S.lat=x.w.p[0][0];S.lng=x.w.p[0][1];S.place=x.w.n;const t=SP_TAB[x.top]||["trout","rainbow"];S.tab=t[0];S.kind[t[0]]=t[1];save();render();scrollTo(0,0);refresh(false)};li.append(b);$("goList").append(li)});
+  const gl=S.gps||[S.lat,S.lng],shut=WATERS.filter(w=>!w.restricted&&Math.round(kmTo(w,gl[0],gl[1])*1.2/80*60)<=S.goMax&&(!S.goSp||w.f[S.goSp])&&!list.some(x=>x.w===w)).map(w=>w.n);
+  $("goNote").textContent=`${shut.length?"Closed today in this range: "+shut.join(", ")+". ":""}${D.stockAt?"Stocking updated "+fmt(new Date(D.stockAt))+". ":"Using saved stocking records. "}Rankings blend season, how good each water is for that fish, recent plants, wind and drive time. Drive times are rough. Check closures before you leave.`;
+}
 function render(){
-  const tabs=Object.keys(P);
+  const tabs=["go",...Object.keys(P)];
   $("tabs").innerHTML="";
-  tabs.forEach(t=>{const b=document.createElement("button");b.textContent=P[t].tab;b.setAttribute("role","tab");b.setAttribute("aria-selected",S.tab===t);b.onclick=()=>{S.tab=t;save();render();scrollTo(0,0)};$("tabs").append(b)});
-  const isM=S.tab==="matters";$("fishing").hidden=isM;$("matters").hidden=!isM;
+  tabs.forEach(t=>{const b=document.createElement("button");b.textContent=t==="go"?"Go":P[t].tab;b.setAttribute("role","tab");b.setAttribute("aria-selected",S.tab===t);b.onclick=()=>{S.tab=t;save();render();scrollTo(0,0)};$("tabs").append(b)});
+  const isM=S.tab==="matters",isG=S.tab==="go";$("fishing").hidden=isM||isG;$("matters").hidden=!isM;$("go").hidden=!isG;
+  if(isG){renderGo();return}
   if(isM){renderMatters();return}
   const kinds=P[S.tab].kinds;$("subs").hidden=kinds.length<2;$("subs").style.display=kinds.length<2?"none":"";
   $("subs").innerHTML="";
@@ -551,7 +746,7 @@ function render(){
   if(!S.live){$("d").value=`${date.getFullYear()}-${pad(month+1)}-${pad(date.getDate())}`;$("t").value=`${pad(date.getHours())}:${pad(date.getMinutes())}`}
   /* water */
   const cw=currentWater(),gl=S.gps||[S.lat,S.lng],sorted=WATERS.map(w=>({w,d:kmTo(w,gl[0],gl[1])})).sort((a,b)=>a.d-b.d);
-  const near=sorted[0].d<=GPS_RANGE?sorted[0].w:null;
+  const near=nearestWater(gl[0],gl[1]);
   if(document.activeElement!==$("water"))$("water").innerHTML=`<option value="">${near?"Looks like "+near.n:"No listed water nearby"}</option>`+sorted.map(x=>`<option value="${x.w.id}"${x.w.id===S.water?" selected":""}>${x.w.n} (${Math.round(x.d*.6214)} mi)</option>`).join("");
   $("oddsBox").hidden=!cw;
   if(cw){
@@ -563,12 +758,16 @@ function render(){
     const VER='<a href="https://wdfw.wa.gov/fishing/regulations/emergency-rules" rel="noopener">Verify with WDFW</a>';
     const fmtD=d=>d.toLocaleDateString([],{month:"short",day:"numeric",year:"numeric"});
     let cls="",msg;
-    if(!st.open){cls="bad";msg=`<b>${ks}: ${st.never?st.word:"usually closed now"}.</b>${st.next?` Opens ${fmtD(st.next)}.`:""}`}
+    if(cw.restricted){cls="warn";msg="<b>Restricted water.</b>"}
+    else if(!st.open){cls="bad";msg=`<b>${ks}: ${st.never?st.word:"usually closed now"}.</b>${st.next?` Opens ${fmtD(st.next)}.`:""}`}
     else if(!isHere){cls="warn";msg=`${ks} aren't a known fishery at ${cw.n}.`}
     else if(rel){cls="warn";msg=`<b>${ks}: release only.</b>`}
     else msg=`${ks}: open under standard rules${st.until?` through ${fmtD(st.until)}`:""}.`;
-    $("flag").hidden=false;$("flag").className="flag "+cls;$("flag").innerHTML=`${msg} ${cw.note?cw.note+" ":""}${VER}.`;
-  } else $("flag").hidden=true;
+    $("flag").hidden=false;$("flag").className="flag "+cls;$("flag").innerHTML=`${msg} ${cw.note?(rel?cw.note.replace("Trout are release only. ",""):cw.note)+" ":""}${VER}.`;
+    const sr=stockFor(cw.id),sd=sr?daysSince(sr.date,date):-1;
+    $("stockLine").hidden=!(sr&&sd>=0&&sd<=120);
+    if(sr)$("stockLine").textContent=`Last plant: ${Number(sr.n).toLocaleString()} ${sr.sp.toLowerCase()}, ${new Date(sr.date+"T12:00:00").toLocaleDateString([],{month:"short",day:"numeric"})} (${sd} days ago).${sr.seed?" Saved record.":""}`;
+  } else {$("flag").hidden=true;$("stockLine").hidden=true}
   const hasT=S.temp!==""&&!isNaN(+S.temp),wt=waterTemp(k,date),t=wt.t,sk=skyNow(date),sky=sk.sky;
   seg("sky",[["sun","Bright"],["cloud","Clouds or chop"],["front","After a front"]],"sky",sky);
   const fromFc=sk.src==="forecast",SKYW={sun:"Bright",cloud:"Clouds or chop",front:"After a front"},showSeg=!fromFc||skyOpen;
@@ -627,8 +826,12 @@ function render(){
     $("dropRows").innerHTML=rows.length?rows.map(r=>`<div class="drop-row${r===bestRow?" best":""}"><b>${OZ_LABEL[r.oz]}</b><span>${r.ft>MAX_LINE?"Too light for this depth":r.ft<25?"Heavier than you need":r.ft+" ft of line out"}</span><span>${r===bestRow?"Use this":""}</span></div>`).join(""):'<p class="fine">Choose the weights you carry.</p>';
     $("dropNote").textContent=`Aims for ${target} ft at ${mph} mph, measured on mono or copolymer with a keel, banana or inline weight. Treat it as a starting point. Slowing down or turning sends the weight deeper, speeding up lifts it, and a big dodger pulls it up a little. Tag bottom once at your speed to check it.`;
   }
-  $("facts").innerHTML=`<dt>Speed</dt><dd>${cur.id==="drop"?dropSpeed(stage)+" mph":pick?o.sp:stage.speed}</dd><dt>Find</dt><dd>${p.target}</dd><dt>Right now</dt><dd>${stage.note}</dd>`;
+  $("facts").innerHTML=`<dt>Speed</dt><dd>${cur.id==="drop"?dropSpeed(stage)+" mph":(pick||!/troll/i.test(o.n+o.sp))?o.sp:stage.speed}</dd><dt>Find</dt><dd>${p.target}</dd>${tipFor(k,cur.id,cw)}<dt>Right now</dt><dd>${stage.note}</dd>${cw&&MAXD[cw.id]?`<dt>Max depth</dt><dd>About ${MAXD[cw.id]} ft</dd>`:""}${flowRow(cw)}<dt>Confidence</dt><dd>${{you:"High: your own water reading.",gauge:"High on temperature: live gauge.",est:"Medium: water temperature is estimated.",month:"Low: no live water or weather data."}[wt.src]}</dd><dt>Maps</dt><dd><a href="https://northwestfishingreports.com/Maps" rel="noopener">Lake depth maps</a></dd>`;
   $("change").innerHTML=["Change depth by 10 ft or to the next temperature band.","Change speed or retrieve.","Change lure type from the list above.","Change to the next color."].map(x=>`<li>${x}</li>`).join("");
+  const tp=cw&&TIPS[cw.id]&&TIPS[cw.id].filter(x=>tipFits(x[0],k));$("tipsBox").hidden=!(tp&&tp.length);
+  if(tp){$("tipsH").textContent=`Local notes: ${cw.n}`;$("tips").innerHTML=tp.map(x=>`<li>${x[0]}<small>${srcType(x[1])}: ${x[2]?`<a href="${x[2]}" rel="noopener">${x[1]}</a>`:x[1]}</small></li>`).join("")}
+  LAST={water:cw?cw.n:"Unlisted water",wid:cw?cw.id:"",kind:k,kname:p.name,setup:setupOf(k,cur.id).n,lure:luresNow[0][0],temp:t,sky,color:(C[cs[0]]||[""])[0],depth:`${d[0]}-${d[1]}`};
+  renderLog();
   $("place").textContent=status||`Getting conditions for ${S.place}.`;
 }
 const EV=[
@@ -639,7 +842,7 @@ const EV=[
 ["Spawn stage","Strong","","Predictable by temperature. Walleye often bite poorly during the peak spawn."],
 ["Run timing and river temperature","Strong for upriver salmon","","Above about 70°F, the Okanogan stops salmon and stacks them in the Brewster Pool. Adult salmon are mostly not feeding, so it's reaction, not hunger."],
 ["Lure color","Moderate","m","Real physics: red fades first with depth and stain. Evidence that one color beats another on a given day is thin, so color comes last in the change order."]];
-const SRC=[["Muskie Lunacy, PLOS ONE (Vinson and Angradi, 2014)","https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0098046"],["In-Fisherman: solunar forces on bass (Manns data)","https://www.in-fisherman.com/editorial/solunar-forces-on-bass-fishing/377272"],["In-Fisherman: barometric pressure and bass","https://www.in-fisherman.com/editorial/barometric-pressure-and-bass/153689"],["Minnesota DNR: walleye biology","https://dnr.state.mn.us/fish/walleye/biology.html"],["Jocassee Reservoir trout temperature study","https://informahealthcare.com/doi/full/10.1577/M03-019.1"],["Northwest Fishing Reports: thermocline","https://northwestfishingreports.com/Articles/Details/264"],["Idaho Fish and Game: kokanee tips","https://idfg.idaho.gov/article/fg-staff-gives-kokanee-fishing-tips-help-you-better-understand-and-catch-these-unique-fish"],["Northwest Fishing Reports: kokanee temperature","https://northwestfishingreports.com/Articles/Details/507"],["WDFW: Lake Chelan","https://wdfw.wa.gov/fishing/locations/lowland-lakes/lake-chelan"],["Pautzke: Brewster Pool","https://pautzke.com/chinook-sockeye-invading-upper-columbia-river/"],["Mack's Lure: sockeye tips","https://mackslure.com/blogs/mack-attack/five-tips-to-catch-more-sockeye-this-summer"],["MSU Extension: salmon feeding in rivers","https://www.canr.msu.edu/news/amazing_revelation_some_pacific_salmon_do_feed_during_spawning_run"],["Bass Resource: largemouth seasons","https://bassresource.com/fish_biology/lgseason.html"],["Bassmaster: spawn-time smallmouth","https://www.bassmaster.com/tips/spawn-time-smallmouth"],["GearJunkie: what bass see","https://gearjunkie.com/outdoor/hunt-fish/what-bass-actually-see"],["Bass Pro: fishing and the color game","https://1source.basspro.com/news-tips/fishing-tackle/5192/fishing-and-color-game"],["Ohio Game Fishing: inline weight depths and speed","https://www.ohiogamefishing.com/threads/dive-charts-for-inline-weights.122264/"],["WDFW: lake and species prospects","https://wdfw.wa.gov/fishing/locations"],["2026-27 rules: Eastside Lakes","https://www.eregulations.com/washington/fishing/eastside-lakes-special-rules-a-f"],["2026-27 rules: Columbia River","https://www.eregulations.com/washington/fishing/columbia-basin-rivers-special-rules-columbia-river"],["WDFW emergency rules","https://wdfw.wa.gov/fishing/regulations/emergency-rules"],["Ohio Game Fishing: 1, 2 and 3 oz at 80 back","https://www.ohiogamefishing.com/threads/spinner-depth-chart-for-2mph.234845/"]];
+const SRC=[["Muskie Lunacy, PLOS ONE (Vinson and Angradi, 2014)","https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0098046"],["In-Fisherman: solunar forces on bass (Manns data)","https://www.in-fisherman.com/editorial/solunar-forces-on-bass-fishing/377272"],["In-Fisherman: barometric pressure and bass","https://www.in-fisherman.com/editorial/barometric-pressure-and-bass/153689"],["Minnesota DNR: walleye biology","https://dnr.state.mn.us/fish/walleye/biology.html"],["Jocassee Reservoir trout temperature study","https://informahealthcare.com/doi/full/10.1577/M03-019.1"],["Northwest Fishing Reports: thermocline","https://northwestfishingreports.com/Articles/Details/264"],["Idaho Fish and Game: kokanee tips","https://idfg.idaho.gov/article/fg-staff-gives-kokanee-fishing-tips-help-you-better-understand-and-catch-these-unique-fish"],["Northwest Fishing Reports: kokanee temperature","https://northwestfishingreports.com/Articles/Details/507"],["WDFW: Lake Chelan","https://wdfw.wa.gov/fishing/locations/lowland-lakes/lake-chelan"],["Pautzke: Brewster Pool","https://pautzke.com/chinook-sockeye-invading-upper-columbia-river/"],["Mack's Lure: sockeye tips","https://mackslure.com/blogs/mack-attack/five-tips-to-catch-more-sockeye-this-summer"],["MSU Extension: salmon feeding in rivers","https://www.canr.msu.edu/news/amazing_revelation_some_pacific_salmon_do_feed_during_spawning_run"],["Bass Resource: largemouth seasons","https://bassresource.com/fish_biology/lgseason.html"],["Bassmaster: spawn-time smallmouth","https://www.bassmaster.com/tips/spawn-time-smallmouth"],["GearJunkie: what bass see","https://gearjunkie.com/outdoor/hunt-fish/what-bass-actually-see"],["Bass Pro: fishing and the color game","https://1source.basspro.com/news-tips/fishing-tackle/5192/fishing-and-color-game"],["Ohio Game Fishing: inline weight depths and speed","https://www.ohiogamefishing.com/threads/dive-charts-for-inline-weights.122264/"],["WDFW: lake and species prospects","https://wdfw.wa.gov/fishing/locations"],["2026-27 rules: Eastside Lakes","https://www.eregulations.com/washington/fishing/eastside-lakes-special-rules-a-f"],["2026-27 rules: Columbia River","https://www.eregulations.com/washington/fishing/columbia-basin-rivers-special-rules-columbia-river"],["WDFW emergency rules","https://wdfw.wa.gov/fishing/regulations/emergency-rules"],["Water bubble rig: Lake Jennings rangers","https://lakejennings.org/wp-content/uploads/2015/10/waterbubble.pdf"],["Yakima Bait: tipping spinners","https://www.yakimabait.com/know-how-reports/fishing-rooster-tail-spinners/"],["Guide review of corn for trout","https://troutandsteelhead.net/trout-fishing-with-corn/"],["Hooking mortality on scented baits (Schisler and Bergersen)","https://cpw.state.co.us:443/Documents/Research/Aquatic/pdf/Publications/PostreleaseHookingMortality1996.pdf"],["Ohio Game Fishing: 1, 2 and 3 oz at 80 back","https://www.ohiogamefishing.com/threads/spinner-depth-chart-for-2mph.234845/"]];
 function renderMatters(){
   $("matters").innerHTML=`<div class="answer"><h1 style="font-size:clamp(44px,11vw,76px)">Why this plan</h1><p class="lead">What the app uses, strongest first.</p></div>
   <table>${EV.map(e=>`<tr><th>${e[0]}</th><td><span class="tag ${e[2]}">${e[1]}</span><br>${e[3]}</td></tr>`).join("")}</table>
@@ -649,6 +852,10 @@ function renderMatters(){
 function setSpeed(v){if(isNaN(v))return;S.drop.speed=Math.round(Math.max(.8,Math.min(3,v))*10)/10;save();render()}
 $("sp").onchange=e=>setSpeed(+e.target.value);
 $("spMinus").onclick=()=>setSpeed(+$("sp").value-.1);$("spPlus").onclick=()=>setSpeed(+$("sp").value+.1);
+$("logYes").onclick=()=>addLog(true);$("logNo").onclick=()=>addLog(false);
+$("logList").onclick=e=>{const a=e.target.getAttribute&&e.target.getAttribute("data-del");if(a){LOG=LOG.filter(x=>String(x.at)!==a);saveLog();renderLog()}};
+$("logCsv").onclick=()=>{const h=["date","result","water","species","setup","lure","color","depth","water_temp","sky"],q=v=>`"${String(v).replace(/"/g,'""')}"`;const rows=LOG.map(e=>[new Date(e.at).toISOString(),e.hit?"caught":"skunked",e.water,e.kname,e.setup,e.lure,e.color,e.depth,e.temp,e.sky].map(q).join(","));const u=URL.createObjectURL(new Blob([[h.join(","),...rows].join("\n")],{type:"text/csv"}));const a=document.createElement("a");a.href=u;a.download="bite-window-log.csv";a.click();URL.revokeObjectURL(u)};
+$("goSp").onchange=e=>{S.goSp=e.target.value;save();renderGo()};$("goMax").onchange=e=>{S.goMax=+e.target.value;save();renderGo()};
 $("water").onchange=e=>{S.water=e.target.value;if(S.water){const w=WATERS.find(x=>x.id===S.water);S.lat=w.p[0][0];S.lng=w.p[0][1];S.place=w.n}else if(S.gps){S.lat=S.gps[0];S.lng=S.gps[1];S.place="your location"}e.target.blur();save();render();refresh(false)};
 $("setup").onchange=e=>{S.setup[S.kind[S.tab]]=e.target.value;save();render()};
 $("live").onclick=()=>{S.live=true;save();render()};
@@ -660,7 +867,7 @@ function bump(n){const cur=waterTemp(S.kind[S.tab],nowDate()).t;S.temp=String(Ma
 $("minus").onclick=()=>bump(-1);$("plus").onclick=()=>bump(1);
 $("gps").onclick=()=>{status="Getting your location.";render();refresh(true)};
 $("why").onclick=()=>{S.tab="matters";save();render();scrollTo(0,0)};
-if(S.tab==="matters")S.tab="trout";
+if(S.tab==="matters")S.tab="go";
 render();
 refresh(false);
 setInterval(()=>{if(S.live&&document.activeElement!==$("temp"))render()},60000);
